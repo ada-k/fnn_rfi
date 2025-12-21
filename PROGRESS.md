@@ -1,3 +1,4 @@
+````markdown
 # Progress Log
 
 This file tracks actions performed and next steps for the `fnn_rfi` project.
@@ -36,3 +37,13 @@ Next actions (in progress / planned)
 
 Notes on reproducibility
 - All code includes docstrings and explanatory comments. Keep this file updated with runs and seed values.
+
+Recent run (smoke test)
+- Environment: `.venv` Python used when running the script on 2025-12-21.
+- Command: `python3 fnn_rfi/scripts/train_toy.py --batch 64 --subset 256`
+- Result: CIFAR10 subset training ran successfully (one epoch smoke test). Sample output:
+  - `Model params: 17856`
+  - `batch 0 loss 2.3172`
+  - `avg loss: 2.2989`
+
+````
