@@ -17,9 +17,10 @@ from models.transformer import TinyVisionTransformer
 
 
 def stats(name, model, x):
-    import math
+    # Run forward first so any LazyModules (e.g. LazyLinear) are materialised
+    with torch.no_grad():
+        y = model(x)
     params = sum(p.numel() for p in model.parameters() if p.requires_grad)
-    y = model(x)
     print(f"{name}: params={params:,} out_shape={y.shape}")
 
 

@@ -1,0 +1,65 @@
+[
+  {
+    "model": "FNN (fib, stages=3)",
+    "task": "classification",
+    "input": "1\u00d73\u00d732\u00d732",
+    "params": 17754,
+    "latency_ms": 3.269
+  },
+  {
+    "model": "FNN (std, stages=3)",
+    "task": "classification",
+    "input": "1\u00d73\u00d732\u00d732",
+    "params": 23754,
+    "latency_ms": 3.294
+  },
+  {
+    "model": "SimpleCNN",
+    "task": "classification",
+    "input": "1\u00d73\u00d732\u00d732",
+    "params": 6418,
+    "latency_ms": 0.427
+  },
+  {
+    "model": "LSTMClassifier",
+    "task": "classification",
+    "input": "1\u00d73\u00d732\u00d732",
+    "params": 145802,
+    "latency_ms": 0.552
+  },
+  {
+    "model": "TinyViT (d=2, e=64)",
+    "task": "classification",
+    "input": "1\u00d73\u00d732\u00d732",
+    "params": 74954,
+    "latency_ms": 1.02
+  },
+  {
+    "model": "FNNSeg (fib, s=3)",
+    "task": "segmentation",
+    "input": "1\u00d71\u00d764\u00d764",
+    "params": 218465,
+    "latency_ms": 10.049
+  },
+  {
+    "model": "FNNSeg (std, s=3)",
+    "task": "segmentation",
+    "input": "1\u00d71\u00d764\u00d764",
+    "params": 344817,
+    "latency_ms": 11.984
+  },
+  {
+    "model": "UNet (base=8, d=3)",
+    "task": "segmentation",
+    "input": "1\u00d71\u00d764\u00d764",
+    "params": 121033,
+    "latency_ms": 3.711
+  },
+  {
+    "model": "UNet (base=16, d=4)",
+    "task": "segmentation",
+    "input": "1\u00d71\u00d764\u00d764",
+    "params": 1942289,
+    "latency_ms": 9.892
+  }
+]

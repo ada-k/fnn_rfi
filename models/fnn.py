@@ -121,7 +121,7 @@ class FNN(nn.Module):
         self.classifier = nn.Sequential(
             nn.AdaptiveAvgPool2d(1),
             nn.Flatten(),
-            nn.Linear(ch, max(num_classes, ch)),
+            nn.Linear(ch, num_classes),
         )
 
     def forward(self, x):

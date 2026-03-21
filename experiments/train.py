@@ -2,10 +2,14 @@
 
 Usage examples (run from repo root):
 
-python -m experiments.train --model fnn --dataset cifar --epochs 2 --batch-size 32
-python -m experiments.train --model unet --dataset synthetic --epochs 1 --batch-size 8
+    python -m experiments.train --model fnn     --dataset cifar     --epochs 3
+    python -m experiments.train --model unet    --dataset synthetic --epochs 5
+    python -m experiments.train --model fnn_seg --dataset synthetic --epochs 5
+
+Results (loss curve + final metrics) are written to ``runs/<run_name>/``.
 """
 import argparse
+import json
 import os
 import time
 
@@ -13,77 +17,128 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-from .utils import set_seed, get_model, get_dataloader, save_checkpoint, save_config
+from .evaluate import evaluate_segmentation
+from .utils import get_dataloader, get_model, save_checkpoint, save_config, set_seed
+
+# Models that output per-pixel logit masks
+_SEG_MODELS = {"unet", "fnn_seg"}
 
 
-def train_epoch(model, loader, optimz, criterion, device):
+def train_epoch(model, loader, optimiser, criterion, device):
+    """One training epoch; returns average loss."""
     model.train()
-    total_loss = 0.0
-    count = 0
+    total, n = 0.0, 0
     for xb, yb in loader:
-        xb = xb.to(device)
-        yb = yb.to(device)
-        optimz.zero_grad()
+        xb, yb = xb.to(device), yb.to(device)
+        optimiser.zero_grad()
         out = model(xb)
-        # adapt to classification vs segmentation
-        if out.shape == yb.shape:
-            loss = criterion(out, yb)
-        else:
-            # assume classification logits
-            loss = criterion(out, yb.long())
+        loss = criterion(out, yb) if out.shape == yb.shape else criterion(out, yb.long())
         loss.backward()
-        optimz.step()
-        total_loss += float(loss.item())
-        count += 1
-    return total_loss / max(1, count)
+        optimiser.step()
+        total += float(loss.item())
+        n += 1
+    return total / max(n, 1)
+
+
+@torch.no_grad()
+def val_epoch(model, loader, criterion, device, is_seg: bool):
+    """One validation epoch; returns a metrics dict."""
+    model.eval()
+    total, n = 0.0, 0
+    for xb, yb in loader:
+        xb, yb = xb.to(device), yb.to(device)
+        out = model(xb)
+        loss = criterion(out, yb) if out.shape == yb.shape else criterion(out, yb.long())
+        total += float(loss.item())
+        n += 1
+
+    metrics = {"val_loss": total / max(n, 1)}
+
+    if is_seg:
+        seg = evaluate_segmentation(model, loader, device=str(device))
+        metrics.update({f"val_{k}": v for k, v in seg.items()})
+
+    return metrics
 
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--model", required=True, help="Model name: fnn|cnn|rnn|transformer|unet")
-    parser.add_argument("--dataset", required=True, help="Dataset: cifar|synthetic")
-    parser.add_argument("--epochs", type=int, default=2)
-    parser.add_argument("--batch-size", type=int, default=32)
-    parser.add_argument("--lr", type=float, default=1e-3)
-    parser.add_argument("--out", default="runs")
-    parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument("--subset", type=int, default=256)
+    parser = argparse.ArgumentParser(description="Train a model on CIFAR or synthetic spectrograms.")
+    parser.add_argument("--model",      required=True,
+                        help="Model: fnn | cnn | rnn | transformer | unet | fnn_seg")
+    parser.add_argument("--dataset",    required=True, help="Dataset: cifar | synthetic")
+    parser.add_argument("--epochs",     type=int,   default=5)
+    parser.add_argument("--batch-size", type=int,   default=16)
+    parser.add_argument("--lr",         type=float, default=1e-3)
+    parser.add_argument("--out",        default="runs")
+    parser.add_argument("--seed",       type=int,   default=42)
+    parser.add_argument("--subset",     type=int,   default=None,
+                        help="Limit training set to this many samples (handy for quick smoke tests).")
+    parser.add_argument("--val-size",   type=int,   default=256,
+                        help="Validation set size for synthetic dataset (ignored for CIFAR).")
     args = parser.parse_args()
 
     set_seed(args.seed)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    is_seg = args.model.lower() in _SEG_MODELS
 
-    device = torch.device("cpu")
+    # ---- data ----------------------------------------------------------------
+    train_loader, num_classes = get_dataloader(
+        args.dataset, batch_size=args.batch_size, subset=args.subset, split="train"
+    )
+    val_loader, _ = get_dataloader(
+        args.dataset, batch_size=args.batch_size,
+        subset=args.val_size if args.dataset == "synthetic" else None,
+        split="val",
+    )
 
-    loader, num_classes = get_dataloader(args.dataset, batch_size=args.batch_size, subset=args.subset)
-    model = get_model(args.model, num_classes=num_classes)
-    model.to(device)
+    # ---- model ---------------------------------------------------------------
+    model = get_model(args.model, num_classes=num_classes).to(device)
 
-    # Choose loss
-    if args.model == "unet":
-        criterion = nn.BCEWithLogitsLoss()
-    else:
-        criterion = nn.CrossEntropyLoss()
+    # ---- loss ----------------------------------------------------------------
+    criterion = nn.BCEWithLogitsLoss() if is_seg else nn.CrossEntropyLoss()
 
-    optimz = optim.Adam(model.parameters(), lr=args.lr)
+    # ---- optimiser -----------------------------------------------------------
+    optimiser = optim.Adam(model.parameters(), lr=args.lr)
 
-    # run directory
+    # ---- run directory -------------------------------------------------------
     run_name = f"{args.model}_{args.dataset}_{int(time.time())}"
     outdir = os.path.join(args.out, run_name)
     os.makedirs(outdir, exist_ok=True)
     save_config(vars(args), outdir)
 
+    # ---- training loop -------------------------------------------------------
+    history = []
     for epoch in range(1, args.epochs + 1):
-        loss = train_epoch(model, loader, optimz, criterion, device)
-        print(f"epoch {epoch} loss {loss:.4f}")
-        # save checkpoint each epoch
-        save_checkpoint({
-            "model_state": model.state_dict(),
-            "optim_state": optimz.state_dict(),
-            "epoch": epoch,
-            "args": vars(args),
-        }, outdir, name=f"ckpt_epoch{epoch}.pth")
+        tr_loss = train_epoch(model, train_loader, optimiser, criterion, device)
+        v_metrics = val_epoch(model, val_loader, criterion, device, is_seg)
 
-    print("Training finished. Outputs saved to:", outdir)
+        row = {"epoch": epoch, "train_loss": round(tr_loss, 5)}
+        row.update({k: round(v, 5) for k, v in v_metrics.items()})
+        history.append(row)
+
+        parts = [f"epoch {epoch}/{args.epochs}",
+                 f"train_loss={tr_loss:.4f}",
+                 f"val_loss={v_metrics['val_loss']:.4f}"]
+        if is_seg:
+            parts.append(f"val_iou={v_metrics.get('val_iou', 0):.4f}")
+            parts.append(f"val_f1={v_metrics.get('val_f1', 0):.4f}")
+        print("  ".join(parts))
+
+        save_checkpoint(
+            {"model_state": model.state_dict(),
+             "optim_state": optimiser.state_dict(),
+             "epoch": epoch,
+             "args": vars(args)},
+            outdir,
+            name=f"ckpt_epoch{epoch}.pth",
+        )
+
+    # ---- save results --------------------------------------------------------
+    results_path = os.path.join(outdir, "results.json")
+    with open(results_path, "w") as f:
+        json.dump({"config": vars(args), "history": history}, f, indent=2)
+
+    print(f"\nDone. Outputs saved to: {outdir}")
 
 
 if __name__ == "__main__":
