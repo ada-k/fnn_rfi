@@ -40,9 +40,12 @@ class _EncoderStage(nn.Module):
     pre-pool skip connection (passed to the matching decoder stage).
     """
 
-    def __init__(self, in_ch: int, out_ch: int, depth: int):
+    def __init__(self, in_ch: int, out_ch: int, depth: int,
+                 drop_path_rate: float = 0.0, use_separable: bool = False):
         super().__init__()
-        self.block = FractalBlock(in_ch, out_ch, depth=depth)
+        self.block = FractalBlock(in_ch, out_ch, depth=depth,
+                                  drop_path_rate=drop_path_rate,
+                                  use_separable=use_separable)
         self.pool = nn.MaxPool2d(2)
 
     def forward(self, x: torch.Tensor):
@@ -53,10 +56,13 @@ class _EncoderStage(nn.Module):
 class _DecoderStage(nn.Module):
     """One decoder stage: 2× ConvTranspose → cat skip → FractalBlock."""
 
-    def __init__(self, in_ch: int, skip_ch: int, out_ch: int, depth: int):
+    def __init__(self, in_ch: int, skip_ch: int, out_ch: int, depth: int,
+                 drop_path_rate: float = 0.0, use_separable: bool = False):
         super().__init__()
         self.up = nn.ConvTranspose2d(in_ch, out_ch, kernel_size=2, stride=2)
-        self.block = FractalBlock(out_ch + skip_ch, out_ch, depth=depth)
+        self.block = FractalBlock(out_ch + skip_ch, out_ch, depth=depth,
+                                  drop_path_rate=drop_path_rate,
+                                  use_separable=use_separable)
 
     def forward(self, x: torch.Tensor, skip: torch.Tensor) -> torch.Tensor:
         x = self.up(x)
@@ -98,6 +104,8 @@ class FNNSeg(nn.Module):
         use_fib: bool = True,
         out_ch: int = 1,
         max_depth: int = 3,
+        drop_path_rate: float = 0.0,
+        use_separable: bool = False,
     ):
         super().__init__()
 
@@ -115,19 +123,23 @@ class FNNSeg(nn.Module):
         prev = in_ch
         for i, w in enumerate(widths):
             depth = min(max_depth, max(1, 2 + i))
-            self.encoder_stages.append(_EncoderStage(prev, w, depth))
+            self.encoder_stages.append(
+                _EncoderStage(prev, w, depth, drop_path_rate, use_separable)
+            )
             prev = w
 
         # --- bottleneck -----------------------------------------------------
         btn_depth = min(max_depth, max(2, stages))
-        self.bottleneck = FractalBlock(prev, btn_ch, depth=btn_depth)
+        self.bottleneck = FractalBlock(prev, btn_ch, depth=btn_depth,
+                                       drop_path_rate=drop_path_rate,
+                                       use_separable=use_separable)
         prev = btn_ch
 
         # --- decoder --------------------------------------------------------
         self.decoder_stages = nn.ModuleList()
         for i, w in enumerate(reversed(widths)):
             depth = min(max_depth, max(1, stages - i))
-            self.decoder_stages.append(_DecoderStage(prev, w, w, depth))
+            self.decoder_stages.append(_DecoderStage(prev, w, w, depth, drop_path_rate, use_separable))
             prev = w
 
         # --- output head ----------------------------------------------------

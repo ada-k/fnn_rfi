@@ -89,4 +89,49 @@ Smoke test results (forward-only)
   - `RNN(LSTM): params=145,802 out_shape=torch.Size([2, 10])`
   - `Transformer: params=74,954 out_shape=torch.Size([2, 10])`
 
+---
+
+## Phase 3 — Full Experiment Suite (in progress, March 2026)
+
+### Environment
+- MacBook Air M4, 10-core CPU, 16GB RAM, macOS
+- Python 3.9 (system), PyTorch 2.8.0
+- MPS backend disabled (unstable on Python 3.9), all training on CPU
+- ~400 GB disk free
+
+### Experiments launched
+- **Segmentation**: 14 configs x 3 seeds = 42 runs (FNNSeg ablation + UNet/ResUNet baselines)
+- **Classification**: 7 configs x 3 seeds = 21 runs (FNN variants + CNN/RNN/Transformer/ResNet)
+- **Inpainting**: 4 configs x 3 seeds = 12 runs (FNNInpaint variants)
+- Total: 75 runs, executing via `experiments/run_all_experiments.py`
+
+### Infrastructure added
+- `experiments/run_grid.py` — generic experiment grid runner with resume support
+- `experiments/visualize.py` — 11 visualization functions for thesis figures
+- `experiments/run_all_experiments.py` — master orchestrator for all experiments
+- `scripts/count_flops.py` — MAC counter using forward hooks
+- `scripts/aggregate_results.py` — cross-seed results aggregation
+- `scripts/run_snr_sweep.py` — SNR robustness evaluation
+- `scripts/interim_viz.py` — generate visualizations from partial results
+- `experiments/utils.py` updated with `get_device()` (CUDA > MPS > CPU)
+
+### Results so far
+- FNNSeg (fib, s=3): IoU=0.976 (1 seed), 218K params
+- FNNSeg (fib+sep, s=3): IoU=0.964+/-0.009 (3 seeds), 81K params — 2.7x fewer params
+- UNet and ResUNet baselines available for comparison
+- SNR sweep completed: peak IoU=0.994 at SNR=5, graceful degradation at extremes
+- Efficiency profiling: 18 model variants benchmarked (params, MACs, latency, throughput)
+
+### Figures generated
+- `figs/spectrogram_samples.png` — synthetic dataset examples
+- `figs/fnn_architecture.png` — channel schedule + fractal block diagram
+- `figs/seg_predictions_interim.png` — model predictions vs ground truth
+- `figs/multi_metric_best.png` — IoU/F1/precision/recall learning curves
+- `figs/learning_curves_interim.png` — cross-run comparison
+- `figs/snr_sweep.png` — robustness across RFI SNR levels
+
+### Report updated
+- `RESEARCH_REPORT.md` Phase 3 section added with efficiency tables, data strategy,
+  interim results, and SNR robustness analysis
+
 ````

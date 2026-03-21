@@ -15,11 +15,28 @@ import torchvision.transforms as T
 
 from ..models.cnn import SimpleCNN
 from ..models.fnn import FNN
+from ..models.fnn_inpaint import FNNInpaint
 from ..models.fnn_seg import FNNSeg
+from ..models.resnet_baseline import ResNetClassifier, ResUNet
 from ..models.rnn import LSTMClassifier
 from ..models.transformer import TinyVisionTransformer
 from ..models.unet import UNet
 from ..data.synthetic_spectrogram import SyntheticSpectrogramDataset
+
+
+def get_device() -> torch.device:
+    """Return the best available device: CUDA > MPS > CPU.
+
+    MPS is skipped on Python < 3.11 due to known stability issues with
+    backward passes on older interpreters.
+    """
+    if torch.cuda.is_available():
+        return torch.device("cuda")
+    import sys
+    if sys.version_info >= (3, 11):
+        if hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+            return torch.device("mps")
+    return torch.device("cpu")
 
 
 def set_seed(seed: int = 42):
@@ -50,19 +67,28 @@ def save_checkpoint(state: dict, outdir: str, name: str = "checkpoint.pth") -> s
 def get_model(name: str, **kwargs) -> nn.Module:
     """Instantiate a model by name.
 
-    Supported names: fnn, fnn_seg, cnn, rnn, transformer, unet.
-    Extra keyword arguments are forwarded to the constructor.
+    Supported names:
+        fnn, fnn_seg, fnn_inpaint, cnn, rnn, transformer,
+        unet, resnet_cls, resunet.
+
+    Extra keyword arguments are forwarded to the constructor where accepted:
+        num_classes, base_channels, use_fib, drop_path_rate, use_separable,
+        in_ch, base_ch, stages, max_depth, n_blocks, ...
     """
     name = name.lower()
     num_classes = kwargs.get("num_classes", 10)
+    drop_path_rate = kwargs.get("drop_path_rate", 0.0)
+    use_separable = kwargs.get("use_separable", False)
 
     if name == "fnn":
         return FNN(
-            in_ch=3,
+            in_ch=kwargs.get("in_ch", 3),
             num_classes=num_classes,
-            stages=3,
+            stages=kwargs.get("stages", 3),
             base_channels=kwargs.get("base_channels", 8),
             use_fib=kwargs.get("use_fib", True),
+            drop_path_rate=drop_path_rate,
+            use_separable=use_separable,
         )
     if name == "fnn_seg":
         return FNNSeg(
@@ -71,25 +97,37 @@ def get_model(name: str, **kwargs) -> nn.Module:
             stages=kwargs.get("stages", 3),
             use_fib=kwargs.get("use_fib", True),
             max_depth=kwargs.get("max_depth", 3),
+            drop_path_rate=drop_path_rate,
+            use_separable=use_separable,
+        )
+    if name == "fnn_inpaint":
+        return FNNInpaint(
+            in_ch=kwargs.get("in_ch", 1),
+            base_ch=kwargs.get("base_ch", 16),
+            stages=kwargs.get("stages", 3),
+            use_fib=kwargs.get("use_fib", True),
+            max_depth=kwargs.get("max_depth", 3),
+            drop_path_rate=drop_path_rate,
+            use_separable=use_separable,
         )
     if name == "cnn":
         return SimpleCNN(
-            in_ch=3,
+            in_ch=kwargs.get("in_ch", 3),
             num_classes=num_classes,
             base_channels=kwargs.get("base_channels", 8),
         )
     if name == "rnn":
         return LSTMClassifier(
-            in_ch=3,
+            in_ch=kwargs.get("in_ch", 3),
             hidden_size=kwargs.get("hidden_size", 128),
             num_layers=kwargs.get("num_layers", 1),
             num_classes=num_classes,
         )
     if name == "transformer":
         return TinyVisionTransformer(
-            in_ch=3,
-            img_size=32,
-            patch_size=4,
+            in_ch=kwargs.get("in_ch", 3),
+            img_size=kwargs.get("img_size", 32),
+            patch_size=kwargs.get("patch_size", 4),
             emb_dim=kwargs.get("emb_dim", 64),
             depth=kwargs.get("depth", 2),
             num_heads=kwargs.get("num_heads", 4),
@@ -101,8 +139,27 @@ def get_model(name: str, **kwargs) -> nn.Module:
             base_ch=kwargs.get("base_ch", 8),
             depth=kwargs.get("depth", 3),
         )
-    raise ValueError(f"Unknown model '{name}'. "
-                     f"Choose from: fnn, fnn_seg, cnn, rnn, transformer, unet.")
+    if name == "resnet_cls":
+        return ResNetClassifier(
+            in_ch=kwargs.get("in_ch", 3),
+            num_classes=num_classes,
+            base_ch=kwargs.get("base_ch", 16),
+            stages=kwargs.get("stages", 3),
+            n_blocks=kwargs.get("n_blocks", 2),
+        )
+    if name == "resunet":
+        return ResUNet(
+            in_ch=kwargs.get("in_ch", 1),
+            base_ch=kwargs.get("base_ch", 16),
+            stages=kwargs.get("stages", 3),
+            out_ch=kwargs.get("out_ch", 1),
+            n_blocks=kwargs.get("n_blocks", 2),
+        )
+    raise ValueError(
+        f"Unknown model '{name}'. "
+        "Choose from: fnn, fnn_seg, fnn_inpaint, cnn, rnn, transformer, "
+        "unet, resnet_cls, resunet."
+    )
 
 
 def get_dataloader(
@@ -115,11 +172,15 @@ def get_dataloader(
 
     Parameters
     ----------
-    name       : ``"cifar"`` or ``"synthetic"``.
+    name       : ``"cifar"``, ``"synthetic"``, or ``"synthetic_inpaint"``.
     batch_size : mini-batch size.
     subset     : if set, limits the dataset to this many samples.
-    split      : ``"train"`` or ``"val"`` (ignored for synthetic, which
-                 generates data on-the-fly with different seeds).
+    split      : ``"train"`` or ``"val"`` (for synthetic, different seeds).
+
+    Returns
+    -------
+    (loader, num_classes)
+        num_classes is 10 for CIFAR and 1 for segmentation datasets.
     """
     name = name.lower()
 
@@ -135,13 +196,23 @@ def get_dataloader(
         if subset and subset < len(ds):
             from torch.utils.data import Subset
             ds = Subset(ds, list(range(subset)))
-        loader = DataLoader(ds, batch_size=batch_size, shuffle=is_train, num_workers=2)
+        loader = DataLoader(ds, batch_size=batch_size, shuffle=is_train, num_workers=0)
         return loader, 10
 
     if name == "synthetic":
+        seed = 0 if split == "train" else 10000
         length = subset or (2048 if split == "train" else 512)
-        ds = SyntheticSpectrogramDataset(length=length, h=64, w=64)
-        loader = DataLoader(ds, batch_size=batch_size, shuffle=(split == "train"), num_workers=2)
+        ds = SyntheticSpectrogramDataset(length=length, h=64, w=64, seed=seed)
+        loader = DataLoader(ds, batch_size=batch_size, shuffle=(split == "train"), num_workers=0)
         return loader, 1  # binary mask output
 
-    raise ValueError(f"Unknown dataset '{name}'. Choose from: cifar, synthetic.")
+    if name == "synthetic_inpaint":
+        seed = 0 if split == "train" else 10000
+        length = subset or (2048 if split == "train" else 512)
+        ds = SyntheticSpectrogramDataset(
+            length=length, h=64, w=64, seed=seed, return_clean=True
+        )
+        loader = DataLoader(ds, batch_size=batch_size, shuffle=(split == "train"), num_workers=0)
+        return loader, 1
+
+    raise ValueError(f"Unknown dataset '{name}'. Choose from: cifar, synthetic, synthetic_inpaint.")

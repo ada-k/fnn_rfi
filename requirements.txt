@@ -3,3 +3,9 @@ torchvision>=0.9.0
 numpy
 tqdm
 scikit-image>=0.19
+matplotlib
+scipy
+h5py
+astropy
+pandas
+tabulate

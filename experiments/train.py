@@ -18,10 +18,10 @@ import torch.nn as nn
 import torch.optim as optim
 
 from .evaluate import evaluate_segmentation
-from .utils import get_dataloader, get_model, save_checkpoint, save_config, set_seed
+from .utils import get_dataloader, get_device, get_model, save_checkpoint, save_config, set_seed
 
-# Models that output per-pixel logit masks
-_SEG_MODELS = {"unet", "fnn_seg"}
+# Models that output per-pixel logit masks (segmentation + baseline segmenters)
+_SEG_MODELS = {"unet", "fnn_seg", "resunet"}
 
 
 def train_epoch(model, loader, optimiser, criterion, device):
@@ -64,7 +64,8 @@ def val_epoch(model, loader, criterion, device, is_seg: bool):
 def main():
     parser = argparse.ArgumentParser(description="Train a model on CIFAR or synthetic spectrograms.")
     parser.add_argument("--model",      required=True,
-                        help="Model: fnn | cnn | rnn | transformer | unet | fnn_seg")
+                        help="Model: fnn | cnn | rnn | transformer | unet | fnn_seg | "
+                             "resnet_cls | resunet")
     parser.add_argument("--dataset",    required=True, help="Dataset: cifar | synthetic")
     parser.add_argument("--epochs",     type=int,   default=5)
     parser.add_argument("--batch-size", type=int,   default=16)
@@ -72,13 +73,17 @@ def main():
     parser.add_argument("--out",        default="runs")
     parser.add_argument("--seed",       type=int,   default=42)
     parser.add_argument("--subset",     type=int,   default=None,
-                        help="Limit training set to this many samples (handy for quick smoke tests).")
+                        help="Limit training set to this many samples.")
     parser.add_argument("--val-size",   type=int,   default=256,
-                        help="Validation set size for synthetic dataset (ignored for CIFAR).")
+                        help="Validation set size for synthetic dataset.")
+    parser.add_argument("--drop-path",  type=float, default=0.0,
+                        help="Drop-path rate for FractalBlock branches (0.0 = disabled).")
+    parser.add_argument("--separable",  action="store_true", default=False,
+                        help="Use depthwise-separable convolutions in FractalBlocks.")
     args = parser.parse_args()
 
     set_seed(args.seed)
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = get_device()
     is_seg = args.model.lower() in _SEG_MODELS
 
     # ---- data ----------------------------------------------------------------
@@ -92,7 +97,12 @@ def main():
     )
 
     # ---- model ---------------------------------------------------------------
-    model = get_model(args.model, num_classes=num_classes).to(device)
+    model = get_model(
+        args.model,
+        num_classes=num_classes,
+        drop_path_rate=args.drop_path,
+        use_separable=args.separable,
+    ).to(device)
 
     # ---- loss ----------------------------------------------------------------
     criterion = nn.BCEWithLogitsLoss() if is_seg else nn.CrossEntropyLoss()

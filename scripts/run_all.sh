@@ -17,45 +17,81 @@ echo "========================================================"
 # ---- segmentation models (primary task) ------------------------------------
 echo ""
 echo "--- Segmentation: FNNSeg (Fibonacci) ---"
-python -m fnn_rfi.experiments.train \
+python3 -m fnn_rfi.experiments.train \
     --model fnn_seg --dataset synthetic \
     --epochs 10 --batch-size 16 --lr 1e-3 --seed 42
 
 echo ""
+echo "--- Segmentation: FNNSeg (separable convs) ---"
+python3 -m fnn_rfi.experiments.train \
+    --model fnn_seg --dataset synthetic \
+    --epochs 10 --batch-size 16 --lr 1e-3 --seed 42 --separable
+
+echo ""
+echo "--- Segmentation: FNNSeg (drop-path 0.1) ---"
+python3 -m fnn_rfi.experiments.train \
+    --model fnn_seg --dataset synthetic \
+    --epochs 10 --batch-size 16 --lr 1e-3 --seed 42 --drop-path 0.1
+
+echo ""
 echo "--- Segmentation: UNet baseline ---"
-python -m fnn_rfi.experiments.train \
+python3 -m fnn_rfi.experiments.train \
     --model unet --dataset synthetic \
     --epochs 10 --batch-size 16 --lr 1e-3 --seed 42
 
+echo ""
+echo "--- Segmentation: ResUNet baseline ---"
+python3 -m fnn_rfi.experiments.train \
+    --model resunet --dataset synthetic \
+    --epochs 10 --batch-size 16 --lr 1e-3 --seed 42
+
+# ---- inpainting model -------------------------------------------------------
+echo ""
+echo "--- Inpainting: FNNInpaint ---"
+python3 -m fnn_rfi.experiments.train_inpaint \
+    --epochs 20 --batch-size 16 --lr 1e-3 --seed 42
+
 # ---- classification smoke tests (CIFAR, small subset) ----------------------
 echo ""
+echo "--- Classification smoke: FNNSeg (Fibonacci) ---"
+python3 -m fnn_rfi.experiments.train \
+    --model fnn_seg --dataset synthetic \
+    --epochs 10 --batch-size 16 --lr 1e-3 --seed 42
+
+echo ""
 echo "--- Classification smoke: FNN ---"
-python -m fnn_rfi.experiments.train \
+python3 -m fnn_rfi.experiments.train \
     --model fnn --dataset cifar \
     --epochs 5 --batch-size 32 --subset 1024 --seed 42
 
 echo ""
 echo "--- Classification smoke: SimpleCNN ---"
-python -m fnn_rfi.experiments.train \
+python3 -m fnn_rfi.experiments.train \
     --model cnn --dataset cifar \
     --epochs 5 --batch-size 32 --subset 1024 --seed 42
 
 echo ""
 echo "--- Classification smoke: LSTM ---"
-python -m fnn_rfi.experiments.train \
+python3 -m fnn_rfi.experiments.train \
     --model rnn --dataset cifar \
     --epochs 5 --batch-size 32 --subset 1024 --seed 42
 
 echo ""
 echo "--- Classification smoke: TinyViT ---"
-python -m fnn_rfi.experiments.train \
+python3 -m fnn_rfi.experiments.train \
     --model transformer --dataset cifar \
+    --epochs 5 --batch-size 32 --subset 1024 --seed 42
+
+echo ""
+echo "--- Classification smoke: ResNetClassifier ---"
+python3 -m fnn_rfi.experiments.train \
+    --model resnet_cls --dataset cifar \
     --epochs 5 --batch-size 32 --subset 1024 --seed 42
 
 # ---- benchmark -------------------------------------------------------------
 echo ""
 echo "--- Parameter & latency benchmark ---"
-python -m fnn_rfi.scripts.benchmark
+python3 -m fnn_rfi.scripts.benchmark
 
 echo ""
 echo "========================================================"
