@@ -64,4 +64,12 @@ Next steps
 8) document.pdf (unspecified)
  - Note: a file named `document.pdf` is present in `fnn_rfi/data/papers/` but lacks a descriptive filename. Please confirm which paper this is (I can auto-extract title if you want me to open it). If it is the Segment-Anything applied to RFI paper (arXiv:2410.22497) or another entry, I'll summarise it similarly.
 
+9) A Comparison Framework for Deep Learning RFI Detection Algorithms in Radio Astronomy
+ - Citation: Charl du Toit, Trienko Grobler, Danie Ludick. Zenodo dataset + URSI GASS 2023 paper. DOI: 10.5281/zenodo.8275061
+ - Summary: Proposes and applies a systematic comparison framework for fully convolutional deep learning models trained on both simulated (HERA) and real (LOFAR) radio-astronomy data for binary RFI flag/mask prediction. Evaluates multiple UNet variants and related encoder-decoder architectures. Releases full datasets and benchmark results publicly (see data/zenodo/).
+ - Methods: Supervised segmentation (binary RFI masks). Models include UNet variants at multiple filter sizes. Preprocessing: log-amplitude + phase channels from complex visibilities; patch extraction (512×512). Evaluation: pixel-level accuracy, F1, precision, recall, ROC AUC. Datasets: HERA (hera_sim simulated, pixel-perfect masks), LOFAR (real LTA observations, expert hand-labels). Both mask sources tested: pixel-perfect simulation masks and AOFlagger-generated masks. GitHub: https://github.com/CharlDuToit/RFI-NLN
+ - Datasets: HERA_28-03-2023_all.pkl (1120 train + 280 test, 512×512, amplitude+phase), HERA_AOF_20-07-2023_all.pkl (AOFlagger labels), LOFAR_Full_RFI_dataset.pkl — all now downloaded to data/zenodo/.
+ - Key results: results_all_models.csv (103 MB) contains full per-model benchmark results. Best models achieve test accuracy in the 0.98–0.997 range on HERA; AUC close to 1.0 for strong models. AOFlagger-labelled data is noisier and harder to learn from. Cross-dataset generalisation (train HERA, test LOFAR) is non-trivial.
+ - Relevance: CRITICAL for this project. (1) The HERA/LOFAR datasets are the real-data evaluation sets for FNNSeg. (2) The results_all_models.csv provides published comparison numbers against which FNNSeg must be directly benchmarked. (3) The paper establishes the exact evaluation protocol (metrics, train/test splits, preprocessing) that our real-data experiments must match. (4) This is the primary external benchmark paper that was NOT in the original proposal literature review and must be added.
+
 

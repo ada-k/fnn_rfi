@@ -22,6 +22,7 @@ from ..models.rnn import LSTMClassifier
 from ..models.transformer import TinyVisionTransformer
 from ..models.unet import UNet
 from ..data.synthetic_spectrogram import SyntheticSpectrogramDataset
+from ..data.hera_dataset import HERADataset, build_hera_loaders
 
 
 def get_device() -> torch.device:
@@ -215,4 +216,34 @@ def get_dataloader(
         loader = DataLoader(ds, batch_size=batch_size, shuffle=(split == "train"), num_workers=0)
         return loader, 1
 
-    raise ValueError(f"Unknown dataset '{name}'. Choose from: cifar, synthetic, synthetic_inpaint.")
+    # --- Real HERA / LOFAR datasets ---
+    # Expects name like "hera", "hera_aof", or "lofar"
+    # with an optional `pkl_path` keyword in kwargs.
+    # Use get_hera_loaders() for the full train/val/test triplet.
+    _ZENODO = "/Users/ada/uel/data/zenodo"
+    _PKL_MAP = {
+        "hera":     f"{_ZENODO}/HERA_28-03-2023_all.pkl",
+        "hera_aof": f"{_ZENODO}/HERA_AOF_20-07-2023_all.pkl",
+        "lofar":    f"{_ZENODO}/LOFAR_Full_RFI_dataset.pkl",
+    }
+    if name in _PKL_MAP:
+        pkl_path = _PKL_MAP[name]
+        patch_size = 256
+        ds = HERADataset(
+            pkl_path=pkl_path,
+            split=split,
+            patch_size=patch_size,
+            stride=patch_size if split != "train" else patch_size // 2,
+            log_amplitude=True,
+            normalize=True,
+        )
+        if subset and subset < len(ds):
+            from torch.utils.data import Subset
+            ds = Subset(ds, list(range(subset)))
+        loader = DataLoader(ds, batch_size=batch_size, shuffle=(split == "train"), num_workers=0)
+        return loader, 1  # binary mask output
+
+    raise ValueError(
+        f"Unknown dataset '{name}'. "
+        "Choose from: cifar, synthetic, synthetic_inpaint, hera, hera_aof, lofar."
+    )

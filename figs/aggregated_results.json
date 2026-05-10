@@ -1,5 +1,56 @@
 [
   {
+    "config_key": "cnn",
+    "model": "cnn",
+    "params": 6418,
+    "n_seeds": 3,
+    "seeds": [
+      123,
+      42,
+      7
+    ],
+    "train_loss_mean": 1.746863333333333,
+    "train_loss_std": 0.006443604063979449,
+    "val_loss_mean": 1.7664833333333334,
+    "val_loss_std": 0.01434400687860042,
+    "val_acc_mean": 0.3359366666666667,
+    "val_acc_std": 0.03197418698471211
+  },
+  {
+    "config_key": "fnn | use_fib=True | use_separable=True | drop_path_rate=0.0 | stages=3 | base_channels=16",
+    "model": "fnn",
+    "params": 9152,
+    "n_seeds": 3,
+    "seeds": [
+      123,
+      42,
+      7
+    ],
+    "train_loss_mean": 1.4831366666666668,
+    "train_loss_std": 0.028324894233400615,
+    "val_loss_mean": 1.7787266666666668,
+    "val_loss_std": 0.0343135109444274,
+    "val_acc_mean": 0.34244666666666673,
+    "val_acc_std": 0.045608069826877484
+  },
+  {
+    "config_key": "fnn | use_fib=True | use_separable=False | drop_path_rate=0.0 | stages=3 | base_channels=16",
+    "model": "fnn",
+    "params": 26202,
+    "n_seeds": 3,
+    "seeds": [
+      123,
+      42,
+      7
+    ],
+    "train_loss_mean": 1.1407133333333332,
+    "train_loss_std": 0.07999866644721859,
+    "val_loss_mean": 1.7066,
+    "val_loss_std": 0.08274137477707265,
+    "val_acc_mean": 0.375,
+    "val_acc_std": 0.01702608880512491
+  },
+  {
     "config_key": "unknown | stages=3 | base_ch=16",
     "model": "unknown",
     "params": 0,
@@ -21,6 +72,190 @@
     "val_psnr_std": 0.0,
     "val_ssim_mean": -0.04926,
     "val_ssim_std": 0.0
+  },
+  {
+    "config_key": "fnn_inpaint | use_fib=True | use_separable=False | drop_path_rate=0.1 | stages=3 | base_ch=16",
+    "model": "fnn_inpaint",
+    "params": 326930,
+    "n_seeds": 3,
+    "seeds": [
+      123,
+      42,
+      7
+    ],
+    "train_loss_mean": 0.03822333333333333,
+    "train_loss_std": 0.0015187275375567956,
+    "val_loss_mean": 0.027066666666666666,
+    "val_loss_std": 0.0021224121497327836,
+    "val_iou_mean": 0.9503499999999999,
+    "val_iou_std": 0.009502757494538055,
+    "val_psnr_mean": 2.0036133333333335,
+    "val_psnr_std": 3.0346377113147023,
+    "val_ssim_mean": 0.18964999999999999,
+    "val_ssim_std": 0.11119912724477651
+  },
+  {
+    "config_key": "fnn_inpaint | use_fib=True | use_separable=True | drop_path_rate=0.0 | stages=3 | base_ch=16",
+    "model": "fnn_inpaint",
+    "params": 127972,
+    "n_seeds": 3,
+    "seeds": [
+      123,
+      42,
+      7
+    ],
+    "train_loss_mean": 0.02649,
+    "train_loss_std": 0.0014038518440348325,
+    "val_loss_mean": 0.02737666666666667,
+    "val_loss_std": 0.0009453747052536009,
+    "val_iou_mean": 0.9564666666666667,
+    "val_iou_std": 0.0023534301207669673,
+    "val_psnr_mean": 12.227773333333333,
+    "val_psnr_std": 5.796653637067971,
+    "val_ssim_mean": 0.48794666666666675,
+    "val_ssim_std": 0.10815892442759098
+  },
+  {
+    "config_key": "fnn_inpaint | use_fib=True | use_separable=False | drop_path_rate=0.0 | stages=3 | base_ch=16",
+    "model": "fnn_inpaint",
+    "params": 326930,
+    "n_seeds": 3,
+    "seeds": [
+      123,
+      42,
+      7
+    ],
+    "train_loss_mean": 0.023610000000000003,
+    "train_loss_std": 0.004911486536681131,
+    "val_loss_mean": 0.02499333333333333,
+    "val_loss_std": 0.0007801495583113093,
+    "val_iou_mean": 0.9622266666666667,
+    "val_iou_std": 0.0035009332089221148,
+    "val_psnr_mean": 0.7746,
+    "val_psnr_std": 1.568740309898359,
+    "val_ssim_mean": 0.15548666666666666,
+    "val_ssim_std": 0.10963612786546838
+  },
+  {
+    "config_key": "fnn_inpaint | use_fib=True | use_separable=False | drop_path_rate=0.0 | stages=3 | base_ch=32",
+    "model": "fnn_inpaint",
+    "params": 1301410,
+    "n_seeds": 3,
+    "seeds": [
+      123,
+      42,
+      7
+    ],
+    "train_loss_mean": 0.017920000000000002,
+    "train_loss_std": 0.004933680167988193,
+    "val_loss_mean": 0.02009,
+    "val_loss_std": 0.004110364947300908,
+    "val_iou_mean": 0.96408,
+    "val_iou_std": 0.008399220201899642,
+    "val_psnr_mean": 2.630306666666667,
+    "val_psnr_std": 2.938741131187525,
+    "val_ssim_mean": 0.28518666666666664,
+    "val_ssim_std": 0.1351914647207187
+  },
+  {
+    "config_key": "fnn_seg | use_fib=True | use_separable=False | drop_path_rate=0.05 | stages=3 | base_ch=16 | max_depth=3",
+    "model": "fnn_seg",
+    "params": 218465,
+    "n_seeds": 3,
+    "seeds": [
+      123,
+      42,
+      7
+    ],
+    "train_loss_mean": 0.023703333333333337,
+    "train_loss_std": 0.003412101014526582,
+    "val_loss_mean": 0.01703666666666667,
+    "val_loss_std": 0.002955508980418319,
+    "val_iou_mean": 0.95817,
+    "val_iou_std": 0.004754860670934583,
+    "val_dice_mean": 0.9784966666666667,
+    "val_dice_std": 0.002565099088404441,
+    "val_precision_mean": 0.99613,
+    "val_precision_std": 0.002737955441565792,
+    "val_recall_mean": 0.9617833333333333,
+    "val_recall_std": 0.006983268098342871,
+    "val_f1_mean": 0.9784966666666667,
+    "val_f1_std": 0.002565099088404441
+  },
+  {
+    "config_key": "fnn_seg | use_fib=True | use_separable=False | drop_path_rate=0.1 | stages=3 | base_ch=16 | max_depth=3",
+    "model": "fnn_seg",
+    "params": 218465,
+    "n_seeds": 3,
+    "seeds": [
+      123,
+      42,
+      7
+    ],
+    "train_loss_mean": 0.031349999999999996,
+    "train_loss_std": 0.003775831034355218,
+    "val_loss_mean": 0.020156666666666666,
+    "val_loss_std": 0.002112873241189195,
+    "val_iou_mean": 0.94835,
+    "val_iou_std": 0.001140920680853843,
+    "val_dice_mean": 0.9732733333333333,
+    "val_dice_std": 0.0005953430383680738,
+    "val_precision_mean": 0.99713,
+    "val_precision_std": 0.0010934349546269022,
+    "val_recall_mean": 0.9509666666666666,
+    "val_recall_std": 0.000926354863609696,
+    "val_f1_mean": 0.9732733333333333,
+    "val_f1_std": 0.0005953430383680738
+  },
+  {
+    "config_key": "fnn_seg | use_fib=True | use_separable=False | drop_path_rate=0.2 | stages=3 | base_ch=16 | max_depth=3",
+    "model": "fnn_seg",
+    "params": 218465,
+    "n_seeds": 3,
+    "seeds": [
+      123,
+      42,
+      7
+    ],
+    "train_loss_mean": 0.04357333333333333,
+    "train_loss_std": 0.0020520802453445467,
+    "val_loss_mean": 0.02431,
+    "val_loss_std": 0.0016839536810732047,
+    "val_iou_mean": 0.9261499999999999,
+    "val_iou_std": 0.003852687373769151,
+    "val_dice_mean": 0.9611633333333334,
+    "val_dice_std": 0.002124201810877062,
+    "val_precision_mean": 0.9986499999999999,
+    "val_precision_std": 7.211102550929032e-05,
+    "val_recall_mean": 0.9273233333333334,
+    "val_recall_std": 0.003832092552814098,
+    "val_f1_mean": 0.9611633333333334,
+    "val_f1_std": 0.002124201810877062
+  },
+  {
+    "config_key": "fnn_seg | use_fib=True | use_separable=True | drop_path_rate=0.1 | stages=3 | base_ch=16 | max_depth=3",
+    "model": "fnn_seg",
+    "params": 81843,
+    "n_seeds": 3,
+    "seeds": [
+      123,
+      42,
+      7
+    ],
+    "train_loss_mean": 0.03355333333333333,
+    "train_loss_std": 0.0023230655034529963,
+    "val_loss_mean": 0.022506666666666664,
+    "val_loss_std": 0.0037301653225203482,
+    "val_iou_mean": 0.9326833333333333,
+    "val_iou_std": 0.017263818619683572,
+    "val_dice_mean": 0.9648233333333334,
+    "val_dice_std": 0.009458944620481377,
+    "val_precision_mean": 0.9949300000000001,
+    "val_precision_std": 0.003480043103181322,
+    "val_recall_mean": 0.93723,
+    "val_recall_std": 0.019450817463541204,
+    "val_f1_mean": 0.9648233333333334,
+    "val_f1_std": 0.009458944620481377
   },
   {
     "config_key": "fnn_seg | use_fib=True | use_separable=True | drop_path_rate=0.0 | stages=3 | base_ch=16 | max_depth=3",
@@ -48,6 +283,31 @@
     "val_f1_std": 0.004710046001190808
   },
   {
+    "config_key": "fnn_seg | use_fib=True | use_separable=False | drop_path_rate=0.0 | stages=2 | base_ch=16 | max_depth=3",
+    "model": "fnn_seg",
+    "params": 93233,
+    "n_seeds": 3,
+    "seeds": [
+      123,
+      42,
+      7
+    ],
+    "train_loss_mean": 0.01312,
+    "train_loss_std": 0.0016805653810548406,
+    "val_loss_mean": 0.021166666666666667,
+    "val_loss_std": 0.012703087551195312,
+    "val_iou_mean": 0.9459833333333334,
+    "val_iou_std": 0.04842896791521919,
+    "val_dice_mean": 0.9717066666666666,
+    "val_dice_std": 0.02604910427122846,
+    "val_precision_mean": 0.9691033333333333,
+    "val_precision_std": 0.04565062139044038,
+    "val_recall_mean": 0.9754833333333334,
+    "val_recall_std": 0.006335963488952049,
+    "val_f1_mean": 0.9717066666666666,
+    "val_f1_std": 0.02604910427122846
+  },
+  {
     "config_key": "fnn_seg | use_fib=True | use_separable=False | drop_path_rate=0.0 | stages=3 | base_ch=16 | max_depth=3",
     "model": "fnn_seg",
     "params": 218465,
@@ -71,6 +331,81 @@
     "val_recall_std": 0.0007374957626996954,
     "val_f1_mean": 0.98764,
     "val_f1_std": 0.0002884441020370689
+  },
+  {
+    "config_key": "fnn_seg | use_fib=True | use_separable=False | drop_path_rate=0.0 | stages=3 | base_ch=32 | max_depth=3",
+    "model": "fnn_seg",
+    "params": 869057,
+    "n_seeds": 3,
+    "seeds": [
+      123,
+      42,
+      7
+    ],
+    "train_loss_mean": 0.011623333333333333,
+    "train_loss_std": 0.005043038105480993,
+    "val_loss_mean": 0.010216666666666667,
+    "val_loss_std": 0.0017737061011715923,
+    "val_iou_mean": 0.9720633333333333,
+    "val_iou_std": 0.007735737413675164,
+    "val_dice_mean": 0.9857566666666667,
+    "val_dice_std": 0.004050436190502626,
+    "val_precision_mean": 0.99659,
+    "val_precision_std": 0.0013727344972717594,
+    "val_recall_mean": 0.9753266666666667,
+    "val_recall_std": 0.009053929165469172,
+    "val_f1_mean": 0.9857566666666667,
+    "val_f1_std": 0.004050436190502626
+  },
+  {
+    "config_key": "fnn_seg | use_fib=True | use_separable=False | drop_path_rate=0.0 | stages=3 | base_ch=8 | max_depth=3",
+    "model": "fnn_seg",
+    "params": 66201,
+    "n_seeds": 3,
+    "seeds": [
+      123,
+      42,
+      7
+    ],
+    "train_loss_mean": 0.02502666666666667,
+    "train_loss_std": 0.0023906554191964447,
+    "val_loss_mean": 0.02365,
+    "val_loss_std": 0.0016630393861842233,
+    "val_iou_mean": 0.96462,
+    "val_iou_std": 0.004367699623371526,
+    "val_dice_mean": 0.9818466666666668,
+    "val_dice_std": 0.0023257758562108557,
+    "val_precision_mean": 0.99178,
+    "val_precision_std": 0.0026168492505301154,
+    "val_recall_mean": 0.9724200000000001,
+    "val_recall_std": 0.006589089466686575,
+    "val_f1_mean": 0.9818466666666668,
+    "val_f1_std": 0.0023257758562108557
+  },
+  {
+    "config_key": "fnn_seg | use_fib=True | use_separable=False | drop_path_rate=0.0 | stages=4 | base_ch=16 | max_depth=3",
+    "model": "fnn_seg",
+    "params": 601393,
+    "n_seeds": 3,
+    "seeds": [
+      123,
+      42,
+      7
+    ],
+    "train_loss_mean": 0.01059,
+    "train_loss_std": 0.0016105589091989147,
+    "val_loss_mean": 0.014956666666666667,
+    "val_loss_std": 0.005713600732754549,
+    "val_iou_mean": 0.9642166666666667,
+    "val_iou_std": 0.014753454962595478,
+    "val_dice_mean": 0.9816066666666666,
+    "val_dice_std": 0.007804705845407202,
+    "val_precision_mean": 0.9915600000000001,
+    "val_precision_std": 0.004070319397786862,
+    "val_recall_mean": 0.9721333333333334,
+    "val_recall_std": 0.012648360895125244,
+    "val_f1_mean": 0.9816066666666666,
+    "val_f1_std": 0.007804705845407202
   },
   {
     "config_key": "fnn_seg | use_fib=False | use_separable=True | drop_path_rate=0.0 | stages=3 | base_ch=16 | max_depth=3",
@@ -101,31 +436,33 @@
     "config_key": "fnn_seg | use_fib=False | use_separable=False | drop_path_rate=0.0 | stages=3 | base_ch=16 | max_depth=3",
     "model": "fnn_seg",
     "params": 344817,
-    "n_seeds": 1,
+    "n_seeds": 2,
     "seeds": [
-      42
+      123,
+      7
     ],
-    "train_loss_mean": 0.01558,
-    "train_loss_std": 0.0,
-    "val_loss_mean": 0.01599,
-    "val_loss_std": 0.0,
-    "val_iou_mean": 0.96982,
-    "val_iou_std": 0.0,
-    "val_dice_mean": 0.98459,
-    "val_dice_std": 0.0,
-    "val_precision_mean": 0.99693,
-    "val_precision_std": 0.0,
-    "val_recall_mean": 0.97273,
-    "val_recall_std": 0.0,
-    "val_f1_mean": 0.98459,
-    "val_f1_std": 0.0
+    "train_loss_mean": 0.013335,
+    "train_loss_std": 0.001237436867076458,
+    "val_loss_mean": 0.014635,
+    "val_loss_std": 0.0029769195487953665,
+    "val_iou_mean": 0.96634,
+    "val_iou_std": 0.00622253967444164,
+    "val_dice_mean": 0.98277,
+    "val_dice_std": 0.0032809754647055646,
+    "val_precision_mean": 0.993605,
+    "val_precision_std": 0.0009828784258493026,
+    "val_recall_mean": 0.97234,
+    "val_recall_std": 0.005374011537017797,
+    "val_f1_mean": 0.98277,
+    "val_f1_std": 0.0032809754647055646
   },
   {
     "config_key": "fnn_seg",
     "model": "fnn_seg",
-    "params": 0,
-    "n_seeds": 2,
+    "params": 218465,
+    "n_seeds": 3,
     "seeds": [
+      42,
       42,
       42
     ],
@@ -143,6 +480,65 @@
     "val_recall_std": 0.0,
     "val_f1_mean": 0.95458,
     "val_f1_std": 0.0
+  },
+  {
+    "config_key": "fnn | use_fib=False | use_separable=False | drop_path_rate=0.0 | stages=3 | base_channels=16",
+    "model": "fnn",
+    "params": 42138,
+    "n_seeds": 3,
+    "seeds": [
+      123,
+      42,
+      7
+    ],
+    "train_loss_mean": 0.92592,
+    "train_loss_std": 0.06360914163860412,
+    "val_loss_mean": 1.71025,
+    "val_loss_std": 0.04881495365151956,
+    "val_acc_mean": 0.3893233333333333,
+    "val_acc_std": 0.023869763998274764
+  },
+  {
+    "config_key": "resnet_cls",
+    "model": "resnet_cls",
+    "params": 874458,
+    "n_seeds": 3,
+    "seeds": [
+      123,
+      42,
+      7
+    ],
+    "train_loss_mean": 0.6822966666666667,
+    "train_loss_std": 0.162172069214564,
+    "val_loss_mean": 2.6434933333333333,
+    "val_loss_std": 0.17783889066605565,
+    "val_acc_mean": 0.32292000000000004,
+    "val_acc_std": 0.03252683200067292
+  },
+  {
+    "config_key": "resunet | stages=3 | base_ch=16",
+    "model": "resunet",
+    "params": 1614833,
+    "n_seeds": 3,
+    "seeds": [
+      123,
+      42,
+      7
+    ],
+    "train_loss_mean": 0.006703333333333333,
+    "train_loss_std": 0.00079776771890904,
+    "val_loss_mean": 0.0075566666666666655,
+    "val_loss_std": 0.0011128941249433086,
+    "val_iou_mean": 0.9738433333333334,
+    "val_iou_std": 0.0029994054966498273,
+    "val_dice_mean": 0.9867033333333334,
+    "val_dice_std": 0.0015526214391580844,
+    "val_precision_mean": 0.9952466666666667,
+    "val_precision_std": 0.0004354690957270659,
+    "val_recall_mean": 0.9783833333333334,
+    "val_recall_std": 0.0032126987616851676,
+    "val_f1_mean": 0.9867033333333334,
+    "val_f1_std": 0.0015526214391580844
   },
   {
     "config_key": "resunet",
@@ -166,5 +562,64 @@
     "val_recall_std": 0.0,
     "val_f1_mean": 0.97681,
     "val_f1_std": 0.0
+  },
+  {
+    "config_key": "rnn",
+    "model": "rnn",
+    "params": 145802,
+    "n_seeds": 3,
+    "seeds": [
+      123,
+      42,
+      7
+    ],
+    "train_loss_mean": 1.4801566666666668,
+    "train_loss_std": 0.037013827596363756,
+    "val_loss_mean": 1.9358666666666666,
+    "val_loss_std": 0.03940721422954598,
+    "val_acc_mean": 0.27864666666666665,
+    "val_acc_std": 0.0325252307191407
+  },
+  {
+    "config_key": "transformer",
+    "model": "transformer",
+    "params": 74954,
+    "n_seeds": 3,
+    "seeds": [
+      123,
+      42,
+      7
+    ],
+    "train_loss_mean": 1.58927,
+    "train_loss_std": 0.022575714828106774,
+    "val_loss_mean": 1.97567,
+    "val_loss_std": 0.10921696891966926,
+    "val_acc_mean": 0.28255,
+    "val_acc_std": 0.05201681170544768
+  },
+  {
+    "config_key": "unet | base_ch=16 | depth=3",
+    "model": "unet",
+    "params": 482449,
+    "n_seeds": 3,
+    "seeds": [
+      123,
+      42,
+      7
+    ],
+    "train_loss_mean": 0.015633333333333332,
+    "train_loss_std": 0.003444725436567237,
+    "val_loss_mean": 0.013773333333333334,
+    "val_loss_std": 0.0011477078606219146,
+    "val_iou_mean": 0.9712266666666668,
+    "val_iou_std": 0.0015864845833897256,
+    "val_dice_mean": 0.98534,
+    "val_dice_std": 0.0008239538822045841,
+    "val_precision_mean": 0.9936866666666667,
+    "val_precision_std": 0.0019914902292839038,
+    "val_recall_mean": 0.9772733333333333,
+    "val_recall_std": 0.00226936848778097,
+    "val_f1_mean": 0.98534,
+    "val_f1_std": 0.0008239538822045841
   }
 ]

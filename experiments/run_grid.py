@@ -139,7 +139,18 @@ def run_single(
     model_kwargs.pop("model", None)
     model_kwargs["num_classes"] = num_classes
     model = get_model(model_name, **model_kwargs).to(device)
-    param_count = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    try:
+        param_count = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    except ValueError:
+        # Some baselines use lazy layers; run one dummy forward to initialize.
+        first_batch = next(iter(train_loader))
+        xb = first_batch[0] if isinstance(first_batch, (tuple, list)) else first_batch
+        xb = xb.to(device)
+        model.eval()
+        with torch.no_grad():
+            _ = model(xb)
+        model.train()
+        param_count = sum(p.numel() for p in model.parameters() if p.requires_grad)
 
     # Loss and optimizer
     if is_inpaint:

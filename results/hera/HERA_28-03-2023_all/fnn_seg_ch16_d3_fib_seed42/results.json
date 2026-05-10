@@ -1,0 +1,57 @@
+{
+  "dataset": "HERA_28-03-2023_all",
+  "model": "fnn_seg",
+  "model_tag": "fnn_seg_ch16_d3_fib_seed42",
+  "params": 218609,
+  "seed": 42,
+  "epochs": 2,
+  "patch_size": 128,
+  "in_ch": 2,
+  "base_ch": 16,
+  "depth": 3,
+  "use_fib": true,
+  "use_sep": false,
+  "drop_path": 0.0,
+  "best_val_acc": 0.9977912902832031,
+  "test_accuracy": 0.9919624328613281,
+  "test_f1": 0.0,
+  "test_auc": 0.6768943658357376,
+  "history": [
+    {
+      "epoch": 1,
+      "train": {
+        "loss": 0.8306762725114822,
+        "accuracy": 0.6451568603515625
+      },
+      "val": {
+        "loss": 0.8340469151735306,
+        "accuracy": 0.9977912902832031,
+        "f1": 0.0,
+        "auc": 0.37263937769029226
+      }
+    },
+    {
+      "epoch": 2,
+      "train": {
+        "loss": 0.8052595630288124,
+        "accuracy": 0.8040809631347656
+      },
+      "val": {
+        "loss": 0.8250664621591568,
+        "accuracy": 0.9977874755859375,
+        "f1": 0.0,
+        "auc": 0.3738601549653281
+      }
+    }
+  ],
+  "normalisation": {
+    "amplitude_stats": [
+      6.408557891845703,
+      5.872133741842041
+    ],
+    "phase_stats": [
+      0.0007627197774127126,
+      1.5860986809594726
+    ]
+  }
+}
