@@ -188,3 +188,123 @@ nohup python3 fnn_rfi/scripts/train_hera.py \
   --model resunet --base_ch 16 --depth 3 \
   --patch 256 --epochs 30 --batch 32 --seed 2 \
   > logs/hera/resunet_ch16_seed2.log 2>&1
+
+# ════════════════════════════════════════════════════════════════════
+# SECTION D — HERA_AOF experiments  (same split, AOFlagger labels)
+# Run after Section C completes. Compares DNN labels vs AOFlagger labels.
+# ════════════════════════════════════════════════════════════════════
+PKL_AOF="data/zenodo/HERA_AOF_20-07-2023_all.pkl"
+
+nohup python3 fnn_rfi/scripts/train_hera.py \
+  --pkl $PKL_AOF --model fnn_seg --base_ch 16 --depth 3 \
+  --patch 256 --epochs 30 --batch 32 --seed 0 \
+  > logs/hera/aof_fnn_seg_ch16_seed0.log 2>&1
+
+nohup python3 fnn_rfi/scripts/train_hera.py \
+  --pkl $PKL_AOF --model fnn_seg --base_ch 16 --depth 3 \
+  --patch 256 --epochs 30 --batch 32 --seed 1 \
+  > logs/hera/aof_fnn_seg_ch16_seed1.log 2>&1
+
+nohup python3 fnn_rfi/scripts/train_hera.py \
+  --pkl $PKL_AOF --model fnn_seg --base_ch 16 --depth 3 \
+  --patch 256 --epochs 30 --batch 32 --seed 2 \
+  > logs/hera/aof_fnn_seg_ch16_seed2.log 2>&1
+
+nohup python3 fnn_rfi/scripts/train_hera.py \
+  --pkl $PKL_AOF --model unet --base_ch 16 --depth 3 \
+  --patch 256 --epochs 30 --batch 32 --seed 0 \
+  > logs/hera/aof_unet_ch16_seed0.log 2>&1
+
+nohup python3 fnn_rfi/scripts/train_hera.py \
+  --pkl $PKL_AOF --model unet --base_ch 16 --depth 3 \
+  --patch 256 --epochs 30 --batch 32 --seed 1 \
+  > logs/hera/aof_unet_ch16_seed1.log 2>&1
+
+nohup python3 fnn_rfi/scripts/train_hera.py \
+  --pkl $PKL_AOF --model unet --base_ch 16 --depth 3 \
+  --patch 256 --epochs 30 --batch 32 --seed 2 \
+  > logs/hera/aof_unet_ch16_seed2.log 2>&1
+
+nohup python3 fnn_rfi/scripts/train_hera.py \
+  --pkl $PKL_AOF --model resunet --base_ch 16 --depth 3 \
+  --patch 256 --epochs 30 --batch 32 --seed 0 \
+  > logs/hera/aof_resunet_ch16_seed0.log 2>&1
+
+nohup python3 fnn_rfi/scripts/train_hera.py \
+  --pkl $PKL_AOF --model resunet --base_ch 16 --depth 3 \
+  --patch 256 --epochs 30 --batch 32 --seed 1 \
+  > logs/hera/aof_resunet_ch16_seed1.log 2>&1
+
+nohup python3 fnn_rfi/scripts/train_hera.py \
+  --pkl $PKL_AOF --model resunet --base_ch 16 --depth 3 \
+  --patch 256 --epochs 30 --batch 32 --seed 2 \
+  > logs/hera/aof_resunet_ch16_seed2.log 2>&1
+
+# ════════════════════════════════════════════════════════════════════
+# SECTION E — LOFAR experiments  (different telescope, generalization test)
+#
+# NOTE: LOFAR pickle is 9.2 GB. Download on VM with:
+#   wget "https://zenodo.org/records/8275061/files/LOFAR_Full_RFI_dataset.pkl" \
+#        -O data/zenodo/LOFAR_Full_RFI_dataset.pkl
+#
+# IMPORTANT: Check LOFAR frame dimensions BEFORE running:
+#   python3 -c "
+#   import pickle
+#   d = pickle.load(open('data/zenodo/LOFAR_Full_RFI_dataset.pkl','rb'))
+#   print('X_train:', d[0].shape, 'X_test:', d[2].shape)
+#   "
+# If frames are 512×512 → use --patch 256 (same as HERA)
+# If frames are smaller (e.g. 256×256) → use --patch 128 or omit --patch for full frame
+# ════════════════════════════════════════════════════════════════════
+PKL_LOF="data/zenodo/LOFAR_Full_RFI_dataset.pkl"
+
+nohup python3 fnn_rfi/scripts/train_hera.py \
+  --pkl $PKL_LOF --model fnn_seg --base_ch 16 --depth 3 \
+  --patch 256 --epochs 30 --batch 32 --seed 0 \
+  > logs/hera/lofar_fnn_seg_ch16_seed0.log 2>&1
+
+nohup python3 fnn_rfi/scripts/train_hera.py \
+  --pkl $PKL_LOF --model fnn_seg --base_ch 16 --depth 3 \
+  --patch 256 --epochs 30 --batch 32 --seed 1 \
+  > logs/hera/lofar_fnn_seg_ch16_seed1.log 2>&1
+
+nohup python3 fnn_rfi/scripts/train_hera.py \
+  --pkl $PKL_LOF --model fnn_seg --base_ch 16 --depth 3 \
+  --patch 256 --epochs 30 --batch 32 --seed 2 \
+  > logs/hera/lofar_fnn_seg_ch16_seed2.log 2>&1
+
+nohup python3 fnn_rfi/scripts/train_hera.py \
+  --pkl $PKL_LOF --model unet --base_ch 16 --depth 3 \
+  --patch 256 --epochs 30 --batch 32 --seed 0 \
+  > logs/hera/lofar_unet_ch16_seed0.log 2>&1
+
+nohup python3 fnn_rfi/scripts/train_hera.py \
+  --pkl $PKL_LOF --model unet --base_ch 16 --depth 3 \
+  --patch 256 --epochs 30 --batch 32 --seed 1 \
+  > logs/hera/lofar_unet_ch16_seed1.log 2>&1
+
+nohup python3 fnn_rfi/scripts/train_hera.py \
+  --pkl $PKL_LOF --model unet --base_ch 16 --depth 3 \
+  --patch 256 --epochs 30 --batch 32 --seed 2 \
+  > logs/hera/lofar_unet_ch16_seed2.log 2>&1
+
+nohup python3 fnn_rfi/scripts/train_hera.py \
+  --pkl $PKL_LOF --model resunet --base_ch 16 --depth 3 \
+  --patch 256 --epochs 30 --batch 32 --seed 0 \
+  > logs/hera/lofar_resunet_ch16_seed0.log 2>&1
+
+nohup python3 fnn_rfi/scripts/train_hera.py \
+  --pkl $PKL_LOF --model resunet --base_ch 16 --depth 3 \
+  --patch 256 --epochs 30 --batch 32 --seed 1 \
+  > logs/hera/lofar_resunet_ch16_seed1.log 2>&1
+
+nohup python3 fnn_rfi/scripts/train_hera.py \
+  --pkl $PKL_LOF --model resunet --base_ch 16 --depth 3 \
+  --patch 256 --epochs 30 --batch 32 --seed 2 \
+  > logs/hera/lofar_resunet_ch16_seed2.log 2>&1
+
+# ════════════════════════════════════════════════════════════════════
+# SECTION F — Cross-dataset generalization  (train on HERA, test on LOFAR)
+# Run AFTER Section C (HERA models trained). Uses best checkpoint from HERA run.
+# Requires a separate evaluation script — see scripts/eval_cross_dataset.py
+# ════════════════════════════════════════════════════════════════════
