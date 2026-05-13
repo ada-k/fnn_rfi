@@ -158,6 +158,8 @@ def main():
     parser.add_argument("--batch", type=int, default=8)
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--patience", type=int, default=0,
+                        help="Early stopping patience based on val_f1 (0 = disabled)")
 
     # Output
     parser.add_argument("--outdir", default=None,
@@ -223,13 +225,27 @@ def main():
     n_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     _log(f"Model built: {args.model}  trainable params={n_params:,}")
 
+    # --- output directory (created before training so checkpoints can be saved mid-run) ---
+    model_tag = (
+        f"{args.model}"
+        f"_ch{args.base_ch}"
+        f"_d{args.depth}"
+        f"{'_fib' if args.use_fib else '_std'}"
+        f"{'_sep' if args.use_sep else ''}"
+        f"_seed{args.seed}"
+    )
+    outdir = args.outdir or f"fnn_rfi/results/hera/{pkl_name}/{model_tag}"
+    os.makedirs(outdir, exist_ok=True)
+    ckpt_path = os.path.join(outdir, "best_model.pt")
+
     # --- training ---
     loss_fn = DiceBCELoss(bce_weight=0.5)
     optimiser = torch.optim.Adam(model.parameters(), lr=args.lr)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimiser, T_max=args.epochs)
 
     best_val_acc = 0.0
-    best_state = None
+    best_val_f1  = 0.0
+    no_improve   = 0
     history = []
 
     for epoch in range(1, args.epochs + 1):
@@ -245,11 +261,22 @@ def main():
 
         if vl["accuracy"] > best_val_acc:
             best_val_acc = vl["accuracy"]
-            best_state = {k: v.cpu().clone() for k, v in model.state_dict().items()}
+            torch.save({k: v.cpu().clone() for k, v in model.state_dict().items()}, ckpt_path)
+
+        if vl["f1"] > best_val_f1:
+            best_val_f1 = vl["f1"]
+            no_improve = 0
+        else:
+            no_improve += 1
+
+        if args.patience > 0 and no_improve >= args.patience:
+            _log(f"Early stopping: no val_f1 improvement for {args.patience} epochs (epoch {epoch})")
+            break
 
     # --- test evaluation with best checkpoint ---
     _log("Training complete — evaluating best checkpoint on test set …")
-    model.load_state_dict(best_state)
+    _log(f"Checkpoint: {ckpt_path}")
+    model.load_state_dict(torch.load(ckpt_path, map_location=device))
     model.to(device)
     test_metrics = evaluate(model, test_loader, device, loss_fn)
     _log(f"=== Test results (best val checkpoint) ===")
@@ -259,17 +286,6 @@ def main():
     _log(f"  best_val_acc  : {best_val_acc:.6f}")
 
     # --- save results ---
-    model_tag = (
-        f"{args.model}"
-        f"_ch{args.base_ch}"
-        f"_d{args.depth}"
-        f"{'_fib' if args.use_fib else '_std'}"
-        f"{'_sep' if args.use_sep else ''}"
-        f"_seed{args.seed}"
-    )
-    outdir = args.outdir or f"fnn_rfi/results/hera/{pkl_name}/{model_tag}"
-    os.makedirs(outdir, exist_ok=True)
-
     results = {
         "dataset": pkl_name,
         "model": args.model,
@@ -285,6 +301,7 @@ def main():
         "use_sep": args.use_sep,
         "drop_path": args.drop_path,
         "best_val_acc": best_val_acc,
+        "checkpoint": ckpt_path,
         "test_accuracy": test_metrics["accuracy"],
         "test_f1": test_metrics["f1"],
         "test_auc": test_metrics["auc"],
