@@ -136,7 +136,8 @@ class HERADataset(Dataset):
         else:
             X, y = X_train_full[train_idx], y_train_full[train_idx]
 
-        _log(f"Split '{split}': {len(X)} frames → building patches …")
+        n_channels = X.shape[-1]
+        _log(f"Split '{split}': {len(X)} frames  channels={n_channels} → building patches …")
 
         # --- amplitude transform ---
         if log_amplitude:
@@ -152,14 +153,17 @@ class HERADataset(Dataset):
                 amplitude_stats = (float(train_amp.mean()), float(train_amp.std()) + 1e-8)
                 _log(f"Amplitude stats computed: mean={amplitude_stats[0]:.4f}  std={amplitude_stats[1]:.4f}")
 
-            if phase_stats is None:
-                train_phase = X_train_full[train_idx, ..., 1]
-                phase_stats = (float(train_phase.mean()), float(train_phase.std()) + 1e-8)
-                _log(f"Phase stats computed:     mean={phase_stats[0]:.4f}  std={phase_stats[1]:.4f}")
-
             X = X.copy()
             X[..., 0] = (X[..., 0] - amplitude_stats[0]) / amplitude_stats[1]
-            X[..., 1] = (X[..., 1] - phase_stats[0]) / phase_stats[1]
+
+            if n_channels > 1:
+                if phase_stats is None:
+                    train_phase = X_train_full[train_idx, ..., 1]
+                    phase_stats = (float(train_phase.mean()), float(train_phase.std()) + 1e-8)
+                    _log(f"Phase stats computed:     mean={phase_stats[0]:.4f}  std={phase_stats[1]:.4f}")
+                X[..., 1] = (X[..., 1] - phase_stats[0]) / phase_stats[1]
+            else:
+                _log("Single-channel data (amplitude only) — skipping phase normalisation.")
 
         self.amplitude_stats = amplitude_stats
         self.phase_stats = phase_stats
