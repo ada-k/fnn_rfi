@@ -129,8 +129,11 @@ class HERADataset(Dataset):
         val_idx   = idx[:n_val]
         train_idx = idx[n_val:]
 
+        # Fancy indexing (val/train) already produces a writable copy.
+        # Test split needs an explicit copy so in-place transforms don't corrupt
+        # the shared `arrays` reference passed from build_hera_loaders.
         if split == "test":
-            X, y = X_test, y_test
+            X, y = X_test.copy(), y_test
         elif split == "val":
             X, y = X_train_full[val_idx], y_train_full[val_idx]
         else:
@@ -139,37 +142,36 @@ class HERADataset(Dataset):
         n_channels = X.shape[-1]
         _log(f"Split '{split}': {len(X)} frames  channels={n_channels} → building patches …")
 
-        # --- amplitude transform ---
+        # --- amplitude transform (in-place — no extra 7 GB copy) ---
         if log_amplitude:
-            X = X.copy()
-            X[..., 0] = np.log1p(X[..., 0])
+            np.log1p(X[..., 0], out=X[..., 0])
 
-        # --- normalisation ---
+        # --- normalisation (in-place — stats from X directly, no re-index of full array) ---
         if normalize:
             if amplitude_stats is None:
-                train_amp = X_train_full[train_idx, ..., 0]
-                if log_amplitude:
-                    train_amp = np.log1p(train_amp)
-                amplitude_stats = (float(train_amp.mean()), float(train_amp.std()) + 1e-8)
+                # X[..., 0] is already log-transformed at this point
+                amplitude_stats = (float(X[..., 0].mean()), float(X[..., 0].std()) + 1e-8)
                 _log(f"Amplitude stats computed: mean={amplitude_stats[0]:.4f}  std={amplitude_stats[1]:.4f}")
 
-            X = X.copy()
-            X[..., 0] = (X[..., 0] - amplitude_stats[0]) / amplitude_stats[1]
+            X[..., 0] -= amplitude_stats[0]
+            X[..., 0] /= amplitude_stats[1]
 
             if n_channels > 1:
                 if phase_stats is None:
-                    train_phase = X_train_full[train_idx, ..., 1]
-                    phase_stats = (float(train_phase.mean()), float(train_phase.std()) + 1e-8)
+                    phase_stats = (float(X[..., 1].mean()), float(X[..., 1].std()) + 1e-8)
                     _log(f"Phase stats computed:     mean={phase_stats[0]:.4f}  std={phase_stats[1]:.4f}")
-                X[..., 1] = (X[..., 1] - phase_stats[0]) / phase_stats[1]
+                X[..., 1] -= phase_stats[0]
+                X[..., 1] /= phase_stats[1]
             else:
                 _log("Single-channel data (amplitude only) — skipping phase normalisation.")
 
         self.amplitude_stats = amplitude_stats
         self.phase_stats = phase_stats
 
-        self.X = X.astype(np.float32)
-        self.y = y.astype(np.float32)
+        # Keep X as float32 (pickle dtype) with no redundant copy.
+        # Keep y as bool to save ~5 GB RAM per split; converted to float32 in __getitem__.
+        self.X = X if X.dtype == np.float32 else X.astype(np.float32)
+        self.y = y  # bool mask
 
         self.patch_size = patch_size
         self.stride = stride if stride is not None else patch_size
@@ -209,8 +211,8 @@ class HERADataset(Dataset):
             msk = self.y[frame_i, r:r + ps, c:c + ps, :]   # (ps, ps, 1)
 
         # channels-last → channels-first for PyTorch
-        img = torch.from_numpy(img.transpose(2, 0, 1))  # (2, H, W)
-        msk = torch.from_numpy(msk.transpose(2, 0, 1))  # (1, H, W)
+        img = torch.from_numpy(np.ascontiguousarray(img.transpose(2, 0, 1)))   # (C, H, W) float32
+        msk = torch.from_numpy(msk.astype(np.float32).transpose(2, 0, 1).copy())  # (1, H, W) float32
 
         return img, msk
 
