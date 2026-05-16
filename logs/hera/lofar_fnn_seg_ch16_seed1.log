@@ -1,0 +1,38 @@
+nohup: ignoring input
+[2026-05-16 03:46:40] === train_hera start ===
+[2026-05-16 03:46:40] Model:   fnn_seg  base_ch=16  depth=3  fib=True  sep=False  drop_path=0.0
+[2026-05-16 03:46:40] Dataset: data/zenodo/LOFAR_Full_RFI_dataset.pkl
+[2026-05-16 03:46:40] Patch:   256px  stride_train=128px  batch=32
+[2026-05-16 03:46:40] Epochs:  30  lr=0.001  seed=1
+[2026-05-16 03:46:40] Device:  cuda
+[2026-05-16 03:46:40] build_hera_loaders: LOFAR_Full_RFI_dataset.pkl  patch=256  stride=128  batch=32  seed=1
+[2026-05-16 03:46:40] Loading pickle: LOFAR_Full_RFI_dataset.pkl  (9.9 GB) …
+[2026-05-16 03:47:32] Pickle loaded — train (7465, 512, 512, 1), test (109, 512, 512, 1)
+[2026-05-16 03:47:35] Split 'train': 6719 frames  channels=1 → building patches …
+[2026-05-16 03:47:46] Amplitude stats computed: mean=13.8471  std=0.9335
+[2026-05-16 03:47:48] Single-channel data (amplitude only) — skipping phase normalisation.
+[2026-05-16 03:47:48] Split 'train' ready: 60471 patches  (patch=256px  stride=128px)
+[2026-05-16 03:47:48] Split 'val': 746 frames  channels=1 → building patches …
+[2026-05-16 03:47:48] Single-channel data (amplitude only) — skipping phase normalisation.
+[2026-05-16 03:47:48] Split 'val' ready: 2984 patches  (patch=256px  stride=256px)
+[2026-05-16 03:47:48] Split 'test': 109 frames  channels=1 → building patches …
+[2026-05-16 03:47:48] Single-channel data (amplitude only) — skipping phase normalisation.
+[2026-05-16 03:47:48] Split 'test' ready: 436 patches  (patch=256px  stride=256px)
+[2026-05-16 03:47:48] Loaders ready — train=60471 patches  val=2984 patches  test=436 patches
+[2026-05-16 03:47:49] Train batches: 1890  Val batches: 94  Test batches: 14
+[2026-05-16 03:47:49] Model built: fnn_seg  trainable params=218,465
+[2026-05-16 04:19:51] Epoch   1/30 | train_loss=0.4195  train_acc=0.9904 | val_loss=0.3031  val_acc=0.9949  val_f1=0.6388  val_auc=0.9471
+[2026-05-16 04:52:15] Epoch   2/30 | train_loss=0.2904  train_acc=0.9957 | val_loss=0.2921  val_acc=0.9945  val_f1=0.6691  val_auc=0.9522
+[2026-05-16 05:24:16] Epoch   3/30 | train_loss=0.2826  train_acc=0.9959 | val_loss=0.2869  val_acc=0.9953  val_f1=0.6687  val_auc=0.9580
+[2026-05-16 05:56:36] Epoch   4/30 | train_loss=0.2777  train_acc=0.9960 | val_loss=0.2837  val_acc=0.9950  val_f1=0.6918  val_auc=0.9604
+[2026-05-16 06:28:49] Epoch   5/30 | train_loss=0.2744  train_acc=0.9961 | val_loss=0.2808  val_acc=0.9954  val_f1=0.6989  val_auc=0.9627
+[2026-05-16 07:01:01] Epoch   6/30 | train_loss=0.2717  train_acc=0.9962 | val_loss=0.2776  val_acc=0.9954  val_f1=0.7087  val_auc=0.9629
+[2026-05-16 07:33:06] Epoch   7/30 | train_loss=0.2695  train_acc=0.9962 | val_loss=0.2774  val_acc=0.9956  val_f1=0.7109  val_auc=0.9640
+[2026-05-16 08:05:18] Epoch   8/30 | train_loss=0.2673  train_acc=0.9963 | val_loss=0.2747  val_acc=0.9957  val_f1=0.7150  val_auc=0.9647
+[2026-05-16 08:37:26] Epoch   9/30 | train_loss=0.2657  train_acc=0.9963 | val_loss=0.2743  val_acc=0.9955  val_f1=0.7159  val_auc=0.9660
+[2026-05-16 09:09:30] Epoch  10/30 | train_loss=0.2642  train_acc=0.9964 | val_loss=0.2732  val_acc=0.9956  val_f1=0.7176  val_auc=0.9657
+[2026-05-16 09:41:33] Epoch  11/30 | train_loss=0.2625  train_acc=0.9964 | val_loss=0.2735  val_acc=0.9957  val_f1=0.7170  val_auc=0.9649
+[2026-05-16 10:13:36] Epoch  12/30 | train_loss=0.2614  train_acc=0.9964 | val_loss=0.2718  val_acc=0.9957  val_f1=0.7212  val_auc=0.9663
+[2026-05-16 10:45:30] Epoch  13/30 | train_loss=0.2598  train_acc=0.9965 | val_loss=0.2709  val_acc=0.9956  val_f1=0.7209  val_auc=0.9681
+[2026-05-16 11:17:24] Epoch  14/30 | train_loss=0.2585  train_acc=0.9965 | val_loss=0.2715  val_acc=0.9957  val_f1=0.7240  val_auc=0.9664
+[2026-05-16 11:49:12] Epoch  15/30 | train_loss=0.2574  train_acc=0.9965 | val_loss=0.2702  val_acc=0.9958  val_f1=0.7257  val_auc=0.9682

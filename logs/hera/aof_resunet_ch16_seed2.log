@@ -1,0 +1,60 @@
+nohup: ignoring input
+[2026-05-15 13:20:02] === train_hera start ===
+[2026-05-15 13:20:02] Model:   resunet  base_ch=16  depth=3  fib=True  sep=False  drop_path=0.0
+[2026-05-15 13:20:02] Dataset: data/zenodo/HERA_AOF_20-07-2023_all.pkl
+[2026-05-15 13:20:02] Patch:   256px  stride_train=128px  batch=32
+[2026-05-15 13:20:02] Epochs:  30  lr=0.001  seed=2
+[2026-05-15 13:20:02] Device:  cuda
+[2026-05-15 13:20:02] build_hera_loaders: HERA_AOF_20-07-2023_all.pkl  patch=256  stride=128  batch=32  seed=2
+[2026-05-15 13:20:02] Loading pickle: HERA_AOF_20-07-2023_all.pkl  (3.3 GB) …
+[2026-05-15 13:20:05] Pickle loaded — train (1120, 512, 512, 2), test (280, 512, 512, 2)
+[2026-05-15 13:20:05] Split 'train': 1008 frames → building patches …
+[2026-05-15 13:20:09] Amplitude stats computed: mean=6.4214  std=5.8848
+[2026-05-15 13:20:10] Phase stats computed:     mean=-0.0008  std=1.5754
+[2026-05-15 13:20:15] Split 'train' ready: 9072 patches  (patch=256px  stride=128px)
+[2026-05-15 13:20:15] Split 'val': 112 frames → building patches …
+[2026-05-15 13:20:15] Split 'val' ready: 448 patches  (patch=256px  stride=256px)
+[2026-05-15 13:20:15] Split 'test': 280 frames → building patches …
+[2026-05-15 13:20:17] Split 'test' ready: 1120 patches  (patch=256px  stride=256px)
+[2026-05-15 13:20:17] Loaders ready — train=9072 patches  val=448 patches  test=1120 patches
+[2026-05-15 13:20:17] Train batches: 284  Val batches: 14  Test batches: 35
+[2026-05-15 13:20:18] Model built: resunet  trainable params=1,614,977
+[2026-05-15 13:22:32] Epoch   1/30 | train_loss=0.3357  train_acc=0.9740 | val_loss=0.1988  val_acc=0.9894  val_f1=0.6766  val_auc=0.8198
+[2026-05-15 13:24:46] Epoch   2/30 | train_loss=0.1692  train_acc=0.9907 | val_loss=0.1772  val_acc=0.9901  val_f1=0.7059  val_auc=0.8650
+[2026-05-15 13:27:01] Epoch   3/30 | train_loss=0.1513  train_acc=0.9915 | val_loss=0.1589  val_acc=0.9909  val_f1=0.7356  val_auc=0.8927
+[2026-05-15 13:29:15] Epoch   4/30 | train_loss=0.1426  train_acc=0.9919 | val_loss=0.1546  val_acc=0.9910  val_f1=0.7405  val_auc=0.9021
+[2026-05-15 13:31:29] Epoch   5/30 | train_loss=0.1372  train_acc=0.9921 | val_loss=0.1545  val_acc=0.9908  val_f1=0.7412  val_auc=0.9182
+[2026-05-15 13:33:43] Epoch   6/30 | train_loss=0.1339  train_acc=0.9923 | val_loss=0.1529  val_acc=0.9910  val_f1=0.7399  val_auc=0.9160
+[2026-05-15 13:35:56] Epoch   7/30 | train_loss=0.1288  train_acc=0.9925 | val_loss=0.1454  val_acc=0.9915  val_f1=0.7555  val_auc=0.9192
+[2026-05-15 13:38:10] Epoch   8/30 | train_loss=0.1243  train_acc=0.9928 | val_loss=0.1415  val_acc=0.9916  val_f1=0.7578  val_auc=0.9207
+[2026-05-15 13:40:24] Epoch   9/30 | train_loss=0.1195  train_acc=0.9930 | val_loss=0.1382  val_acc=0.9917  val_f1=0.7609  val_auc=0.9316
+[2026-05-15 13:42:38] Epoch  10/30 | train_loss=0.1153  train_acc=0.9932 | val_loss=0.1375  val_acc=0.9918  val_f1=0.7666  val_auc=0.9251
+[2026-05-15 13:44:52] Epoch  11/30 | train_loss=0.1126  train_acc=0.9934 | val_loss=0.1370  val_acc=0.9917  val_f1=0.7672  val_auc=0.9357
+[2026-05-15 13:47:06] Epoch  12/30 | train_loss=0.1093  train_acc=0.9936 | val_loss=0.1320  val_acc=0.9921  val_f1=0.7733  val_auc=0.9399
+[2026-05-15 13:49:19] Epoch  13/30 | train_loss=0.1047  train_acc=0.9939 | val_loss=0.1318  val_acc=0.9922  val_f1=0.7766  val_auc=0.9269
+[2026-05-15 13:51:34] Epoch  14/30 | train_loss=0.1019  train_acc=0.9940 | val_loss=0.1289  val_acc=0.9923  val_f1=0.7802  val_auc=0.9325
+[2026-05-15 13:53:48] Epoch  15/30 | train_loss=0.0989  train_acc=0.9942 | val_loss=0.1293  val_acc=0.9923  val_f1=0.7807  val_auc=0.9337
+[2026-05-15 13:56:02] Epoch  16/30 | train_loss=0.0948  train_acc=0.9945 | val_loss=0.1276  val_acc=0.9925  val_f1=0.7867  val_auc=0.9388
+[2026-05-15 13:58:16] Epoch  17/30 | train_loss=0.0911  train_acc=0.9947 | val_loss=0.1259  val_acc=0.9924  val_f1=0.7855  val_auc=0.9392
+[2026-05-15 14:00:30] Epoch  18/30 | train_loss=0.0873  train_acc=0.9949 | val_loss=0.1234  val_acc=0.9926  val_f1=0.7920  val_auc=0.9397
+[2026-05-15 14:02:44] Epoch  19/30 | train_loss=0.0848  train_acc=0.9951 | val_loss=0.1233  val_acc=0.9927  val_f1=0.7920  val_auc=0.9394
+[2026-05-15 14:04:58] Epoch  20/30 | train_loss=0.0810  train_acc=0.9953 | val_loss=0.1208  val_acc=0.9926  val_f1=0.7942  val_auc=0.9440
+[2026-05-15 14:07:12] Epoch  21/30 | train_loss=0.0774  train_acc=0.9955 | val_loss=0.1194  val_acc=0.9929  val_f1=0.8026  val_auc=0.9437
+[2026-05-15 14:09:26] Epoch  22/30 | train_loss=0.0740  train_acc=0.9957 | val_loss=0.1196  val_acc=0.9928  val_f1=0.7989  val_auc=0.9421
+[2026-05-15 14:11:40] Epoch  23/30 | train_loss=0.0715  train_acc=0.9959 | val_loss=0.1189  val_acc=0.9928  val_f1=0.7990  val_auc=0.9432
+[2026-05-15 14:13:54] Epoch  24/30 | train_loss=0.0693  train_acc=0.9960 | val_loss=0.1179  val_acc=0.9930  val_f1=0.8031  val_auc=0.9410
+[2026-05-15 14:16:09] Epoch  25/30 | train_loss=0.0678  train_acc=0.9961 | val_loss=0.1172  val_acc=0.9930  val_f1=0.8044  val_auc=0.9446
+[2026-05-15 14:18:23] Epoch  26/30 | train_loss=0.0662  train_acc=0.9962 | val_loss=0.1173  val_acc=0.9931  val_f1=0.8069  val_auc=0.9416
+[2026-05-15 14:20:37] Epoch  27/30 | train_loss=0.0648  train_acc=0.9963 | val_loss=0.1169  val_acc=0.9931  val_f1=0.8073  val_auc=0.9401
+[2026-05-15 14:22:51] Epoch  28/30 | train_loss=0.0640  train_acc=0.9963 | val_loss=0.1165  val_acc=0.9932  val_f1=0.8094  val_auc=0.9406
+[2026-05-15 14:25:05] Epoch  29/30 | train_loss=0.0635  train_acc=0.9964 | val_loss=0.1164  val_acc=0.9931  val_f1=0.8098  val_auc=0.9406
+[2026-05-15 14:27:19] Epoch  30/30 | train_loss=0.0633  train_acc=0.9964 | val_loss=0.1166  val_acc=0.9931  val_f1=0.8097  val_auc=0.9400
+[2026-05-15 14:27:19] Training complete — evaluating best checkpoint on test set …
+[2026-05-15 14:27:19] Checkpoint: fnn_rfi/results/hera/HERA_AOF_20-07-2023_all/resunet_ch16_d3_fib_seed2/best_model.pt
+[2026-05-15 14:27:56] === Test results (best val checkpoint) ===
+[2026-05-15 14:27:56]   test_accuracy : 0.993855
+[2026-05-15 14:27:56]   test_f1       : 0.756797
+[2026-05-15 14:27:56]   test_auc      : 0.972257
+[2026-05-15 14:27:56]   best_val_acc  : 0.993172
+[2026-05-15 14:27:56] Results saved to fnn_rfi/results/hera/HERA_AOF_20-07-2023_all/resunet_ch16_d3_fib_seed2/results.json
+[2026-05-15 14:27:56] === train_hera done ===

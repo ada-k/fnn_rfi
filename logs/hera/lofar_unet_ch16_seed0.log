@@ -1,0 +1,11 @@
+nohup: ignoring input
+[2026-05-16 03:30:22] === train_hera start ===
+[2026-05-16 03:30:22] Model:   unet  base_ch=16  depth=3  fib=True  sep=False  drop_path=0.0
+[2026-05-16 03:30:22] Dataset: data/zenodo/LOFAR_Full_RFI_dataset.pkl
+[2026-05-16 03:30:22] Patch:   256px  stride_train=128px  batch=32
+[2026-05-16 03:30:22] Epochs:  30  lr=0.001  seed=0
+[2026-05-16 03:30:22] Device:  cuda
+[2026-05-16 03:30:22] build_hera_loaders: LOFAR_Full_RFI_dataset.pkl  patch=256  stride=128  batch=32  seed=0
+[2026-05-16 03:30:22] Loading pickle: LOFAR_Full_RFI_dataset.pkl  (9.9 GB) …
+[2026-05-16 03:31:00] Pickle loaded — train (7465, 512, 512, 1), test (109, 512, 512, 1)
+[2026-05-16 03:31:11] Split 'train': 6719 frames  channels=1 → building patches …
