@@ -1,0 +1,27 @@
+nohup: ignoring input
+[2026-05-17 00:35:15] === train_hera start ===
+[2026-05-17 00:35:15] Model:   resunet  base_ch=16  depth=3  fib=True  sep=False  drop_path=0.0
+[2026-05-17 00:35:15] Dataset: data/zenodo/LOFAR_Full_RFI_dataset.pkl
+[2026-05-17 00:35:15] Patch:   256px  stride_train=128px  batch=32
+[2026-05-17 00:35:15] Epochs:  30  lr=0.001  seed=0
+[2026-05-17 00:35:15] Device:  cuda
+[2026-05-17 00:35:15] build_hera_loaders: LOFAR_Full_RFI_dataset.pkl  patch=256  stride=128  batch=32  seed=0
+[2026-05-17 00:35:15] Loading pickle: LOFAR_Full_RFI_dataset.pkl  (9.9 GB) …
+[2026-05-17 00:35:40] Pickle loaded — train (7465, 512, 512, 1), test (109, 512, 512, 1)
+[2026-05-17 00:35:43] Split 'train': 6719 frames  channels=1 → building patches …
+[2026-05-17 00:35:55] Amplitude stats computed: mean=13.8510  std=0.9307
+[2026-05-17 00:35:56] Single-channel data (amplitude only) — skipping phase normalisation.
+[2026-05-17 00:35:57] Split 'train' ready: 60471 patches  (patch=256px  stride=128px)
+[2026-05-17 00:35:57] Split 'val': 746 frames  channels=1 → building patches …
+[2026-05-17 00:35:57] Single-channel data (amplitude only) — skipping phase normalisation.
+[2026-05-17 00:35:57] Split 'val' ready: 2984 patches  (patch=256px  stride=256px)
+[2026-05-17 00:35:57] Split 'test': 109 frames  channels=1 → building patches …
+[2026-05-17 00:35:57] Single-channel data (amplitude only) — skipping phase normalisation.
+[2026-05-17 00:35:57] Split 'test' ready: 436 patches  (patch=256px  stride=256px)
+[2026-05-17 00:35:57] Loaders ready — train=60471 patches  val=2984 patches  test=436 patches
+[2026-05-17 00:35:58] Train batches: 1890  Val batches: 94  Test batches: 14
+[2026-05-17 00:35:58] Model built: resunet  trainable params=1,614,833
+[2026-05-17 01:02:29] Epoch   1/30 | train_loss=0.3143  train_acc=0.9944 | val_loss=0.2993  val_acc=0.9949  val_f1=0.6326  val_auc=0.9355
+[2026-05-17 01:29:09] Epoch   2/30 | train_loss=0.2847  train_acc=0.9958 | val_loss=0.2928  val_acc=0.9950  val_f1=0.6514  val_auc=0.9434
+[2026-05-17 01:55:51] Epoch   3/30 | train_loss=0.2762  train_acc=0.9960 | val_loss=0.2844  val_acc=0.9954  val_f1=0.6620  val_auc=0.9498
+[2026-05-17 02:22:33] Epoch   4/30 | train_loss=0.2707  train_acc=0.9961 | val_loss=0.2801  val_acc=0.9955  val_f1=0.6771  val_auc=0.9531
