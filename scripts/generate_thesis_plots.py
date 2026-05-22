@@ -348,42 +348,46 @@ def fig_learning_curves_lofar():
 def fig_pareto():
     ds = "HERA_28-03-2023_all"
     seeds = [0, 1, 2]
-    fig, ax = plt.subplots(figsize=(9, 6))
-    # Our models
+    fig, ax = plt.subplots(figsize=(10, 6.5))
+    # du Toit baselines — draw FIRST so they appear under our markers
+    dutoit = {
+        "UNET":              (291633,  0.9869),
+        "ASPP_UNET":         (291633,  0.9863),
+        "DSC_DUAL_RESUNET":  (370494,  0.9859),
+        "DSC_MONO_RESUNET":  (185226,  0.9826),
+        "RFI_NET":           (805473,  0.9936),
+        "RNET":              (32705,   0.9895),
+        "RNET5":             (19809,   0.9851),
+    }
+    dt_params = [v[0] for v in dutoit.values()]
+    dt_f1s    = [v[1] for v in dutoit.values()]
+    # Explicit scatter with legend label
+    ax.scatter(dt_params, dt_f1s, marker="^", s=100, color="#9CA3AF",
+               zorder=3, alpha=1.0, label="du Toit et al. (2023)")
+    for name, (p, f) in dutoit.items():
+        ax.annotate(name, xy=(p, f), xytext=(5, -12),
+                    textcoords="offset points", fontsize=7, color="#6B7280")
+    # Our models — draw on top
     for m in MODELS:
         f1s = [get(ds, m, s)["test_f1"] for s in seeds if get(ds, m, s)]
         params = get(ds, m, 0)["params"]
         mu, sd = mean_std(f1s)
         ax.errorbar(params, mu, yerr=sd, fmt="o", color=PALETTE[m],
-                    markersize=10, capsize=5, label=MODEL_LABELS[m],
-                    zorder=5, linewidth=2)
-        ax.annotate(MODEL_LABELS[m], (params, mu),
-                    textcoords="offset points", xytext=(8, 4), fontsize=8)
-    # du Toit models
-    dutoit = {
-        "UNET":          (291633,  0.9869),
-        "ASPP_UNET":     (291633,  0.9863),
-        "DSC_DUAL_RESUNET": (370494, 0.9859),
-        "DSC_MONO_RESUNET": (185226, 0.9826),
-        "RFI_NET":       (805473,  0.9936),
-        "RNET":          (32705,   0.9895),
-        "RNET5":         (19809,   0.9851),
-    }
-    for name, (params, f1) in dutoit.items():
-        ax.scatter(params, f1, marker="^", s=80, color="#6B7280",
-                   zorder=3, alpha=0.75)
-        ax.annotate(name, (params, f1),
-                    textcoords="offset points", xytext=(5, -10),
-                    fontsize=7.5, color="#374151")
-    ax.set_xlabel("Number of Parameters (log scale)")
-    ax.set_ylabel("Test F1 Score")
+                    markersize=11, capsize=5, label=MODEL_LABELS[m],
+                    zorder=6, linewidth=2)
+        ax.annotate(MODEL_LABELS[m], xy=(params, mu),
+                    xytext=(8, 4), textcoords="offset points",
+                    fontsize=9, color=PALETTE[m], fontweight="bold")
+    ax.set_xlabel("Number of Parameters (log scale)", fontsize=11)
+    ax.set_ylabel("Test F1 Score", fontsize=11)
     ax.set_xscale("log")
-    ax.set_title("Parameter Efficiency: Test F1 vs Model Size\n(● = this work, ▲ = du Toit et al., 2023)",
-                 fontweight="bold")
-    ax.legend(loc="lower right")
-    ax.set_ylim(0.96, 1.002)
-    # Shading for "better" quadrant
-    ax.axvline(x=218609, color=PALETTE["fnn_seg"], linestyle=":", alpha=0.4)
+    ax.set_title("Parameter Efficiency: Test F1 vs Model Size\n"
+                 "(circles = this work   |   triangles = du Toit et al., 2023)",
+                 fontweight="bold", fontsize=11)
+    ax.legend(loc="lower right", fontsize=9)
+    ax.set_ylim(0.975, 1.002)
+    ax.set_yticks(np.arange(0.975, 1.001, 0.005))
+    ax.grid(axis="y", alpha=0.3)
     fig.tight_layout()
     path = f"{OUTDIR}/fig7_pareto_efficiency.png"
     fig.savefig(path, bbox_inches="tight")
@@ -398,18 +402,18 @@ def fig_comparison_dutoit():
     ds = "HERA_28-03-2023_all"
     seeds = [0, 1, 2]
     our_models = {
-        "FNNSeg\n(Ours)": ("fnn_seg", "#2563EB"),
-        "U-Net\n(Ours)":  ("unet",    "#16A34A"),
-        "ResU-Net\n(Ours)": ("resunet","#DC2626"),
+        "FNNSeg":   ("fnn_seg", "#2563EB"),
+        "U-Net":    ("unet",    "#16A34A"),
+        "ResU-Net": ("resunet", "#DC2626"),
     }
     dutoit_models = {
-        "RNET5":            (0.9851, "#9CA3AF"),
+        "RNET5":             (0.9851, "#9CA3AF"),
         "DSC_MONO\nRESUNET": (0.9826, "#9CA3AF"),
-        "RNET":             (0.9895, "#9CA3AF"),
-        "ASPP\nUNET":       (0.9863, "#9CA3AF"),
-        "UNET\n(du Toit)":  (0.9869, "#9CA3AF"),
-        "DSC_DUAL\nRESUNET":(0.9859, "#9CA3AF"),
-        "RFI_NET":          (0.9936, "#9CA3AF"),
+        "RNET":              (0.9895, "#9CA3AF"),
+        "ASPP\nUNET":        (0.9863, "#9CA3AF"),
+        "UNET\n(du Toit)":   (0.9869, "#9CA3AF"),
+        "DSC_DUAL\nRESUNET": (0.9859, "#9CA3AF"),
+        "RFI_NET":           (0.9936, "#9CA3AF"),
     }
     labels, f1s, colors, errs = [], [], [], []
     for label, (mkey, col) in our_models.items():
