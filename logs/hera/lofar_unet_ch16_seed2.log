@@ -1,0 +1,62 @@
+nohup: ignoring input
+[2026-05-18 13:30:20] === train_hera start ===
+[2026-05-18 13:30:20] Model:   unet  base_ch=16  depth=3  fib=True  sep=False  drop_path=0.0
+[2026-05-18 13:30:20] Dataset: data/zenodo/LOFAR_Full_RFI_dataset.pkl
+[2026-05-18 13:30:20] Patch:   256px  stride_train=128px  batch=32
+[2026-05-18 13:30:20] Epochs:  30  lr=0.001  seed=2
+[2026-05-18 13:30:20] Device:  cuda
+[2026-05-18 13:30:20] build_hera_loaders: LOFAR_Full_RFI_dataset.pkl  patch=256  stride=128  batch=32  seed=2
+[2026-05-18 13:30:20] Loading pickle: LOFAR_Full_RFI_dataset.pkl  (9.9 GB) …
+[2026-05-18 13:31:04] Pickle loaded — train (7465, 512, 512, 1), test (109, 512, 512, 1)
+[2026-05-18 13:31:07] Split 'train': 6719 frames  channels=1 → building patches …
+[2026-05-18 13:31:14] Amplitude stats computed: mean=13.8498  std=0.9355
+[2026-05-18 13:31:15] Single-channel data (amplitude only) — skipping phase normalisation.
+[2026-05-18 13:31:15] Split 'train' ready: 60471 patches  (patch=256px  stride=128px)
+[2026-05-18 13:31:15] Split 'val': 746 frames  channels=1 → building patches …
+[2026-05-18 13:31:16] Single-channel data (amplitude only) — skipping phase normalisation.
+[2026-05-18 13:31:16] Split 'val' ready: 2984 patches  (patch=256px  stride=256px)
+[2026-05-18 13:31:16] Split 'test': 109 frames  channels=1 → building patches …
+[2026-05-18 13:31:16] Single-channel data (amplitude only) — skipping phase normalisation.
+[2026-05-18 13:31:16] Split 'test' ready: 436 patches  (patch=256px  stride=256px)
+[2026-05-18 13:31:16] Loaders ready — train=60471 patches  val=2984 patches  test=436 patches
+[2026-05-18 13:31:16] Train batches: 1890  Val batches: 94  Test batches: 14
+[2026-05-18 13:31:17] Model built: unet  trainable params=482,449
+[2026-05-18 13:42:58] Epoch   1/30 | train_loss=0.3963  train_acc=0.9901 | val_loss=0.2960  val_acc=0.9961  val_f1=0.6809  val_auc=0.9389
+[2026-05-18 13:54:14] Epoch   2/30 | train_loss=0.2861  train_acc=0.9957 | val_loss=0.2875  val_acc=0.9963  val_f1=0.7015  val_auc=0.9490
+[2026-05-18 14:05:29] Epoch   3/30 | train_loss=0.2784  train_acc=0.9959 | val_loss=0.2792  val_acc=0.9964  val_f1=0.7181  val_auc=0.9584
+[2026-05-18 14:16:46] Epoch   4/30 | train_loss=0.2734  train_acc=0.9960 | val_loss=0.2781  val_acc=0.9964  val_f1=0.7222  val_auc=0.9552
+[2026-05-18 14:28:02] Epoch   5/30 | train_loss=0.2698  train_acc=0.9961 | val_loss=0.2748  val_acc=0.9966  val_f1=0.7318  val_auc=0.9606
+[2026-05-18 14:39:17] Epoch   6/30 | train_loss=0.2667  train_acc=0.9962 | val_loss=0.2735  val_acc=0.9966  val_f1=0.7321  val_auc=0.9640
+[2026-05-18 14:50:32] Epoch   7/30 | train_loss=0.2641  train_acc=0.9963 | val_loss=0.2710  val_acc=0.9966  val_f1=0.7418  val_auc=0.9643
+[2026-05-18 15:01:49] Epoch   8/30 | train_loss=0.2618  train_acc=0.9963 | val_loss=0.2709  val_acc=0.9967  val_f1=0.7443  val_auc=0.9611
+[2026-05-18 15:13:04] Epoch   9/30 | train_loss=0.2597  train_acc=0.9964 | val_loss=0.2703  val_acc=0.9966  val_f1=0.7432  val_auc=0.9643
+[2026-05-18 15:24:20] Epoch  10/30 | train_loss=0.2578  train_acc=0.9964 | val_loss=0.2697  val_acc=0.9968  val_f1=0.7505  val_auc=0.9604
+[2026-05-18 15:35:34] Epoch  11/30 | train_loss=0.2558  train_acc=0.9965 | val_loss=0.2690  val_acc=0.9968  val_f1=0.7531  val_auc=0.9631
+[2026-05-18 15:46:50] Epoch  12/30 | train_loss=0.2539  train_acc=0.9965 | val_loss=0.2687  val_acc=0.9968  val_f1=0.7549  val_auc=0.9650
+[2026-05-18 15:58:04] Epoch  13/30 | train_loss=0.2523  train_acc=0.9966 | val_loss=0.2681  val_acc=0.9968  val_f1=0.7533  val_auc=0.9645
+[2026-05-18 16:09:18] Epoch  14/30 | train_loss=0.2507  train_acc=0.9966 | val_loss=0.2685  val_acc=0.9967  val_f1=0.7517  val_auc=0.9644
+[2026-05-18 16:20:32] Epoch  15/30 | train_loss=0.2493  train_acc=0.9966 | val_loss=0.2678  val_acc=0.9969  val_f1=0.7584  val_auc=0.9652
+[2026-05-18 16:31:47] Epoch  16/30 | train_loss=0.2476  train_acc=0.9967 | val_loss=0.2671  val_acc=0.9969  val_f1=0.7585  val_auc=0.9640
+[2026-05-18 16:43:01] Epoch  17/30 | train_loss=0.2463  train_acc=0.9967 | val_loss=0.2671  val_acc=0.9969  val_f1=0.7589  val_auc=0.9649
+[2026-05-18 16:54:16] Epoch  18/30 | train_loss=0.2450  train_acc=0.9967 | val_loss=0.2672  val_acc=0.9969  val_f1=0.7602  val_auc=0.9660
+[2026-05-18 17:05:30] Epoch  19/30 | train_loss=0.2438  train_acc=0.9967 | val_loss=0.2675  val_acc=0.9969  val_f1=0.7598  val_auc=0.9651
+[2026-05-18 17:16:44] Epoch  20/30 | train_loss=0.2427  train_acc=0.9968 | val_loss=0.2668  val_acc=0.9969  val_f1=0.7624  val_auc=0.9658
+[2026-05-18 17:28:02] Epoch  21/30 | train_loss=0.2417  train_acc=0.9968 | val_loss=0.2668  val_acc=0.9969  val_f1=0.7622  val_auc=0.9650
+[2026-05-18 17:39:20] Epoch  22/30 | train_loss=0.2408  train_acc=0.9968 | val_loss=0.2672  val_acc=0.9970  val_f1=0.7624  val_auc=0.9653
+[2026-05-18 17:50:40] Epoch  23/30 | train_loss=0.2400  train_acc=0.9968 | val_loss=0.2667  val_acc=0.9969  val_f1=0.7622  val_auc=0.9654
+[2026-05-18 18:01:57] Epoch  24/30 | train_loss=0.2392  train_acc=0.9968 | val_loss=0.2670  val_acc=0.9970  val_f1=0.7642  val_auc=0.9658
+[2026-05-18 18:13:14] Epoch  25/30 | train_loss=0.2387  train_acc=0.9969 | val_loss=0.2668  val_acc=0.9969  val_f1=0.7631  val_auc=0.9660
+[2026-05-18 18:24:32] Epoch  26/30 | train_loss=0.2382  train_acc=0.9969 | val_loss=0.2671  val_acc=0.9969  val_f1=0.7637  val_auc=0.9657
+[2026-05-18 18:35:49] Epoch  27/30 | train_loss=0.2378  train_acc=0.9969 | val_loss=0.2670  val_acc=0.9970  val_f1=0.7637  val_auc=0.9657
+[2026-05-18 18:47:05] Epoch  28/30 | train_loss=0.2375  train_acc=0.9969 | val_loss=0.2669  val_acc=0.9970  val_f1=0.7648  val_auc=0.9656
+[2026-05-18 18:58:20] Epoch  29/30 | train_loss=0.2374  train_acc=0.9969 | val_loss=0.2670  val_acc=0.9970  val_f1=0.7644  val_auc=0.9654
+[2026-05-18 19:09:37] Epoch  30/30 | train_loss=0.2373  train_acc=0.9969 | val_loss=0.2671  val_acc=0.9970  val_f1=0.7641  val_auc=0.9656
+[2026-05-18 19:09:37] Training complete — evaluating best checkpoint on test set …
+[2026-05-18 19:09:37] Checkpoint: fnn_rfi/results/hera/LOFAR_Full_RFI_dataset/unet_ch16_d3_fib_seed2/best_model.pt
+[2026-05-18 19:09:48] === Test results (best val checkpoint) ===
+[2026-05-18 19:09:48]   test_accuracy : 0.994428
+[2026-05-18 19:09:48]   test_f1       : 0.625086
+[2026-05-18 19:09:48]   test_auc      : 0.957620
+[2026-05-18 19:09:48]   best_val_acc  : 0.996969
+[2026-05-18 19:09:48] Results saved to fnn_rfi/results/hera/LOFAR_Full_RFI_dataset/unet_ch16_d3_fib_seed2/results.json
+[2026-05-18 19:09:48] === train_hera done ===
