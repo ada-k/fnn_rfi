@@ -152,42 +152,42 @@
 # ════════════════════════════════════════════════════════════════════
 # batch=32 on GPU (T4 has 15GB VRAM, 32×(2×256×256×4B) = ~128MB — fits easily)
 # get_device() in train_hera.py auto-selects CUDA if available — no code change needed.
-
+# this is done
 # ── 2/9  FNNSeg  seed=1  [GPU] ───────────────────────────────────────────────
 nohup python3 fnn_rfi/scripts/train_hera.py \
   --model fnn_seg --base_ch 16 --depth 3 \
-  --patch 256 --epochs 30 --batch 32 --seed 1 \
-  > logs/hera/fnn_seg_ch16_seed1.log 2>&1
+  --patch 256 --epochs 30 --batch 32 --seed 1  --patience 7 \
+  > fnn_rfi/logs/hera/fnn_seg_ch16_seed1.log 2>&1
 
 # ── 3/9  FNNSeg  seed=2  [GPU] ───────────────────────────────────────────────
 nohup python3 fnn_rfi/scripts/train_hera.py \
   --model fnn_seg --base_ch 16 --depth 3 --patience 7 \
   --patch 256 --epochs 30 --batch 32 --seed 2 \
-  > logs/hera/fnn_seg_ch16_seed2.log 2>&1
+  > fnn_rfi/logs/hera/fnn_seg_ch16_seed2.log 2>&1
 
 # ── 5/9  UNet  seed=1  [GPU] ─────────────────────────────────────────────────
 nohup python3 fnn_rfi/scripts/train_hera.py \
-  --model unet --base_ch 16 --depth 3 --patience 7\
+  --model unet --base_ch 16 --depth 3 --patience 7 \
   --patch 256 --epochs 30 --batch 32 --seed 1 \
-  > logs/hera/unet_ch16_seed1.log 2>&1
+  > fnn_rfi/logs/hera/unet_ch16_seed1.log 2>&1
 
 # ── 6/9  UNet  seed=2  [GPU] ─────────────────────────────────────────────────
 nohup python3 fnn_rfi/scripts/train_hera.py \
   --model unet --base_ch 16 --depth 3 --patience 7 \
   --patch 256 --epochs 30 --batch 32 --seed 2 \
-  > logs/hera/unet_ch16_seed2.log 2>&1
+  > fnn_rfi/logs/hera/unet_ch16_seed2.log 2>&1
 
 # ── 8/9  ResUNet  seed=1  [GPU] ──────────────────────────────────────────────
 nohup python3 fnn_rfi/scripts/train_hera.py \
   --model resunet --base_ch 16 --depth 3 --patience 7 \
   --patch 256 --epochs 30 --batch 32 --seed 1 \
-  > logs/hera/resunet_ch16_seed1.log 2>&1
+  > fnn_rfi/logs/hera/resunet_ch16_seed1.log 2>&1
 
 # ── 9/9  ResUNet  seed=2  [GPU] ──────────────────────────────────────────────
 nohup python3 fnn_rfi/scripts/train_hera.py \
   --model resunet --base_ch 16 --depth 3 --patience 7 \
   --patch 256 --epochs 30 --batch 32 --seed 2 \
-  > logs/hera/resunet_ch16_seed2.log 2>&1
+  > fnn_rfi/logs/hera/resunet_ch16_seed2.log 2>&1
 
 # ════════════════════════════════════════════════════════════════════
 # SECTION D — HERA_AOF experiments  (same split, AOFlagger labels)
@@ -198,110 +198,127 @@ PKL_AOF="data/zenodo/HERA_AOF_20-07-2023_all.pkl"
 nohup python3 fnn_rfi/scripts/train_hera.py \
   --pkl $PKL_AOF --model fnn_seg --base_ch 16 --depth 3 --patience 7 \
   --patch 256 --epochs 30 --batch 32 --seed 0 \
-  > logs/hera/aof_fnn_seg_ch16_seed0.log 2>&1
+  > fnn_rfi/logs/hera/aof_fnn_seg_ch16_seed0.log 2>&1
 
 nohup python3 fnn_rfi/scripts/train_hera.py \
   --pkl $PKL_AOF --model fnn_seg --base_ch 16 --depth 3 --patience 7 \
   --patch 256 --epochs 30 --batch 32 --seed 1 \
-  > logs/hera/aof_fnn_seg_ch16_seed1.log 2>&1
+  > fnn_rfi/logs/hera/aof_fnn_seg_ch16_seed1.log 2>&1
 
+PKL_AOF="data/zenodo/HERA_AOF_20-07-2023_all.pkl"
 nohup python3 fnn_rfi/scripts/train_hera.py \
   --pkl $PKL_AOF --model fnn_seg --base_ch 16 --depth 3 --patience 7 \
   --patch 256 --epochs 30 --batch 32 --seed 2 \
-  > logs/hera/aof_fnn_seg_ch16_seed2.log 2>&1
+  > fnn_rfi/logs/hera/aof_fnn_seg_ch16_seed2.log 2>&1
 
+PKL_AOF="data/zenodo/HERA_AOF_20-07-2023_all.pkl"
 nohup python3 fnn_rfi/scripts/train_hera.py \
   --pkl $PKL_AOF --model unet --base_ch 16 --depth 3 --patience 7 \
   --patch 256 --epochs 30 --batch 32 --seed 0 \
-  > logs/hera/aof_unet_ch16_seed0.log 2>&1
+  > fnn_rfi/logs/hera/aof_unet_ch16_seed0.log 2>&1
 
+PKL_AOF="data/zenodo/HERA_AOF_20-07-2023_all.pkl"
 nohup python3 fnn_rfi/scripts/train_hera.py \
   --pkl $PKL_AOF --model unet --base_ch 16 --depth 3 --patience 7 \
   --patch 256 --epochs 30 --batch 32 --seed 1 \
-  > logs/hera/aof_unet_ch16_seed1.log 2>&1
+  > fnn_rfi/logs/hera/aof_unet_ch16_seed1.log 2>&1
 
+PKL_AOF="data/zenodo/HERA_AOF_20-07-2023_all.pkl"
 nohup python3 fnn_rfi/scripts/train_hera.py \
   --pkl $PKL_AOF --model unet --base_ch 16 --depth 3 --patience 7 \
   --patch 256 --epochs 30 --batch 32 --seed 2 \
-  > logs/hera/aof_unet_ch16_seed2.log 2>&1
+  > fnn_rfi/logs/hera/aof_unet_ch16_seed2.log 2>&1
 
+PKL_AOF="data/zenodo/HERA_AOF_20-07-2023_all.pkl"
 nohup python3 fnn_rfi/scripts/train_hera.py \
   --pkl $PKL_AOF --model resunet --base_ch 16 --depth 3 --patience 7 \
   --patch 256 --epochs 30 --batch 32 --seed 0 \
-  > logs/hera/aof_resunet_ch16_seed0.log 2>&1
+  > fnn_rfi/logs/hera/aof_resunet_ch16_seed0.log 2>&1
 
+PKL_AOF="data/zenodo/HERA_AOF_20-07-2023_all.pkl"
 nohup python3 fnn_rfi/scripts/train_hera.py \
   --pkl $PKL_AOF --model resunet --base_ch 16 --depth 3 --patience 7 \
   --patch 256 --epochs 30 --batch 32 --seed 1 \
-  > logs/hera/aof_resunet_ch16_seed1.log 2>&1
+  > fnn_rfi/logs/hera/aof_resunet_ch16_seed1.log 2>&1
 
+PKL_AOF="data/zenodo/HERA_AOF_20-07-2023_all.pkl"
 nohup python3 fnn_rfi/scripts/train_hera.py \
   --pkl $PKL_AOF --model resunet --base_ch 16 --depth 3 --patience 7 \
   --patch 256 --epochs 30 --batch 32 --seed 2 \
-  > logs/hera/aof_resunet_ch16_seed2.log 2>&1
+  > fnn_rfi/logs/hera/aof_resunet_ch16_seed2.log 2>&1
 
 # ════════════════════════════════════════════════════════════════════
 # SECTION E — LOFAR experiments  (different telescope, generalization test)
 #
-# NOTE: LOFAR pickle is 9.2 GB. Download on VM with:
+# KEY DIFFERENCES vs HERA:
+#   - LOFAR pickle is 9.9 GB (single-channel: amplitude only, no phase)
+#   - Must use --in_ch 1  (model input channels)
+#   - RAM constraint: 9.9 GB pickle + copies ≈ 25 GB per job → only 1 job at a time
+#   - Do NOT run two LOFAR jobs in parallel (OOM kill)
+#
+# Download on VM (if not yet done):
 #   wget "https://zenodo.org/records/8275061/files/LOFAR_Full_RFI_dataset.pkl" \
 #        -O data/zenodo/LOFAR_Full_RFI_dataset.pkl
-#
-# IMPORTANT: Check LOFAR frame dimensions BEFORE running:
-#   python3 -c "
-#   import pickle
-#   d = pickle.load(open('data/zenodo/LOFAR_Full_RFI_dataset.pkl','rb'))
-#   print('X_train:', d[0].shape, 'X_test:', d[2].shape)
-#   "
-# If frames are 512×512 → use --patch 256 (same as HERA)
-# If frames are smaller (e.g. 256×256) → use --patch 128 or omit --patch for full frame
 # ════════════════════════════════════════════════════════════════════
 PKL_LOF="data/zenodo/LOFAR_Full_RFI_dataset.pkl"
 
+# Run ONE at a time — wait for each to finish before starting the next
+# Check with: tail -f fnn_rfi/logs/hera/lofar_fnn_seg_ch16_seed0.log
+# or:         ps aux | grep python
+# - these were ran one at a time
+PKL_LOF="data/zenodo/LOFAR_Full_RFI_dataset.pkl" # done used n1 std 8 single
 nohup python3 fnn_rfi/scripts/train_hera.py \
-  --pkl $PKL_LOF --model fnn_seg --base_ch 16 --depth 3 --patience 7 \
+  --pkl $PKL_LOF --model fnn_seg --base_ch 16 --depth 3 --in_ch 1 --patience 7 \
   --patch 256 --epochs 30 --batch 32 --seed 0 \
-  > logs/hera/lofar_fnn_seg_ch16_seed0.log 2>&1
+  > fnn_rfi/logs/hera/lofar_fnn_seg_ch16_seed0.log 2>&1
 
+PKL_LOF="data/zenodo/LOFAR_Full_RFI_dataset.pkl" # use ni highmem 8 parallel
 nohup python3 fnn_rfi/scripts/train_hera.py \
-  --pkl $PKL_LOF --model fnn_seg --base_ch 16 --depth 3 --patience 7 \
+  --pkl $PKL_LOF --model fnn_seg --base_ch 16 --depth 3 --in_ch 1 --patience 7 \
   --patch 256 --epochs 30 --batch 32 --seed 1 \
-  > logs/hera/lofar_fnn_seg_ch16_seed1.log 2>&1
+  > fnn_rfi/logs/hera/lofar_fnn_seg_ch16_seed1.log 2>&1
 
+PKL_LOF="data/zenodo/LOFAR_Full_RFI_dataset.pkl" # use ni highmem 8 parallel
 nohup python3 fnn_rfi/scripts/train_hera.py \
-  --pkl $PKL_LOF --model fnn_seg --base_ch 16 --depth 3 --patience 7 \
+  --pkl $PKL_LOF --model fnn_seg --base_ch 16 --depth 3 --in_ch 1 --patience 7 \
   --patch 256 --epochs 30 --batch 32 --seed 2 \
-  > logs/hera/lofar_fnn_seg_ch16_seed2.log 2>&1
+  > fnn_rfi/logs/hera/lofar_fnn_seg_ch16_seed2.log 2>&1
 
+PKL_LOF="data/zenodo/LOFAR_Full_RFI_dataset.pkl" # use ni highmem 8 parallel
 nohup python3 fnn_rfi/scripts/train_hera.py \
-  --pkl $PKL_LOF --model unet --base_ch 16 --depth 3 --patience 7 \
+  --pkl $PKL_LOF --model unet --base_ch 16 --depth 3 --in_ch 1 --patience 7 \
   --patch 256 --epochs 30 --batch 32 --seed 0 \
-  > logs/hera/lofar_unet_ch16_seed0.log 2>&1
+  > fnn_rfi/logs/hera/lofar_unet_ch16_seed0.log 2>&1
 
+PKL_LOF="data/zenodo/LOFAR_Full_RFI_dataset.pkl" # use ni highmem 8 single
 nohup python3 fnn_rfi/scripts/train_hera.py \
-  --pkl $PKL_LOF --model unet --base_ch 16 --depth 3 --patience 7 \
+  --pkl $PKL_LOF --model unet --base_ch 16 --depth 3 --in_ch 1 --patience 7 \
   --patch 256 --epochs 30 --batch 32 --seed 1 \
-  > logs/hera/lofar_unet_ch16_seed1.log 2>&1
+  > fnn_rfi/logs/hera/lofar_unet_ch16_seed1.log 2>&1
 
+PKL_LOF="data/zenodo/LOFAR_Full_RFI_dataset.pkl" # use ni highmem 8 single
 nohup python3 fnn_rfi/scripts/train_hera.py \
-  --pkl $PKL_LOF --model unet --base_ch 16 --depth 3 --patience 7 \
+  --pkl $PKL_LOF --model unet --base_ch 16 --depth 3 --in_ch 1 --patience 7 \
   --patch 256 --epochs 30 --batch 32 --seed 2 \
-  > logs/hera/lofar_unet_ch16_seed2.log 2>&1
+  > fnn_rfi/logs/hera/lofar_unet_ch16_seed2.log 2>&1
 
+PKL_LOF="data/zenodo/LOFAR_Full_RFI_dataset.pkl" # use ni highmem 8 paralle
 nohup python3 fnn_rfi/scripts/train_hera.py \
-  --pkl $PKL_LOF --model resunet --base_ch 16 --depth 3 --patience 7 \
+  --pkl $PKL_LOF --model resunet --base_ch 16 --depth 3 --in_ch 1 --patience 7 \
   --patch 256 --epochs 30 --batch 32 --seed 0 \
-  > logs/hera/lofar_resunet_ch16_seed0.log 2>&1
+  > fnn_rfi/logs/hera/lofar_resunet_ch16_seed0.log 2>&1
 
+PKL_LOF="data/zenodo/LOFAR_Full_RFI_dataset.pkl" # no parallel n1 highmem 8
 nohup python3 fnn_rfi/scripts/train_hera.py \
-  --pkl $PKL_LOF --model resunet --base_ch 16 --depth 3 --patience 7 \
+  --pkl $PKL_LOF --model resunet --base_ch 16 --depth 3 --in_ch 1 --patience 7 \
   --patch 256 --epochs 30 --batch 32 --seed 1 \
-  > logs/hera/lofar_resunet_ch16_seed1.log 2>&1
+  > fnn_rfi/logs/hera/lofar_resunet_ch16_seed1.log 2>&1
 
+PKL_LOF="data/zenodo/LOFAR_Full_RFI_dataset.pkl" # no parallel n1 highmem 8
 nohup python3 fnn_rfi/scripts/train_hera.py \
-  --pkl $PKL_LOF --model resunet --base_ch 16 --depth 3 --patience 7 \
+  --pkl $PKL_LOF --model resunet --base_ch 16 --depth 3 --in_ch 1 --patience 7 \
   --patch 256 --epochs 30 --batch 32 --seed 2 \
-  > logs/hera/lofar_resunet_ch16_seed2.log 2>&1
+  > fnn_rfi/logs/hera/lofar_resunet_ch16_seed2.log 2>&1
 
 # ════════════════════════════════════════════════════════════════════
 # SECTION F — Cross-dataset generalization  (train on HERA, test on LOFAR)
