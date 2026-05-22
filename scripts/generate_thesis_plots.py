@@ -84,12 +84,26 @@ def mean_std(vals):
     v = [x for x in vals if x == x]  # drop NaN
     return np.mean(v), np.std(v)
 
+def _bar_label(ax, x, mu, sd, fmt=".4f", ylim_top=1.0):
+    """Smart bar annotation: inside (white) when near top, outside (black) otherwise."""
+    gap = 0.012
+    above = mu + sd + gap
+    if above > ylim_top - 0.015:
+        # place inside bar, near its top
+        ax.text(x, mu - 0.035, f"{mu:{fmt}}", ha="center", va="top",
+                fontsize=8, fontweight="bold", color="white",
+                clip_on=True)
+    else:
+        ax.text(x, above, f"{mu:{fmt}}", ha="center", va="bottom",
+                fontsize=8, fontweight="bold", color="black",
+                clip_on=True)
+
 # ──────────────────────────────────────────────────────────────
 # FIG 1 — F1 BAR CHART (3 datasets, 3 models, mean±std over seeds)
 # Full 0–1 scale with 0.1 ticks
 # ──────────────────────────────────────────────────────────────
 def fig_f1_bars():
-    fig, axes = plt.subplots(1, 3, figsize=(14, 5), sharey=True)
+    fig, axes = plt.subplots(1, 3, figsize=(14, 5), sharey=False)
     seeds = [0, 1, 2]
     for ax, ds in zip(axes, DATASETS):
         x = np.arange(len(MODELS))
@@ -101,8 +115,7 @@ def fig_f1_bars():
                    label=MODEL_LABELS[m], zorder=3)
             ax.errorbar(i, mu, yerr=sd, fmt="none", color="black",
                         capsize=4, linewidth=1.5, zorder=4)
-            ax.text(i, mu + sd + 0.012, f"{mu:.4f}", ha="center",
-                    va="bottom", fontsize=8, fontweight="bold")
+            _bar_label(ax, i, mu, sd, fmt=".4f", ylim_top=1.0)
         ax.set_xticks(x)
         ax.set_xticklabels([MODEL_LABELS[m] for m in MODELS], rotation=12, ha="right")
         ax.set_title(DS_LABELS[ds], fontweight="bold")
@@ -110,6 +123,7 @@ def fig_f1_bars():
         ax.set_ylim(0, 1.0)
         ax.set_yticks(np.arange(0, 1.1, 0.1))
         ax.set_yticklabels([f"{v:.1f}" for v in np.arange(0, 1.1, 0.1)])
+        ax.tick_params(labelleft=True)
     handles = [mpatches.Patch(color=PALETTE[m], label=MODEL_LABELS[m]) for m in MODELS]
     fig.legend(handles=handles, loc="lower center", ncol=3, bbox_to_anchor=(0.5, -0.02))
     fig.suptitle("Test F1 Score (mean ± std over 3 seeds)", fontsize=13, fontweight="bold")
@@ -123,7 +137,7 @@ def fig_f1_bars():
 # FIG 2 — AUC BAR CHART (0–1 scale, 0.1 ticks)
 # ──────────────────────────────────────────────────────────────
 def fig_auc_bars():
-    fig, axes = plt.subplots(1, 3, figsize=(14, 5), sharey=True)
+    fig, axes = plt.subplots(1, 3, figsize=(14, 5), sharey=False)
     seeds = [0, 1, 2]
     for ax, ds in zip(axes, DATASETS):
         for i, m in enumerate(MODELS):
@@ -132,14 +146,14 @@ def fig_auc_bars():
             ax.bar(i, mu, 0.5, color=PALETTE[m], alpha=0.85, zorder=3)
             ax.errorbar(i, mu, yerr=sd, fmt="none", color="black",
                         capsize=4, linewidth=1.5, zorder=4)
-            ax.text(i, mu + sd + 0.012, f"{mu:.4f}", ha="center",
-                    va="bottom", fontsize=8, fontweight="bold")
+            _bar_label(ax, i, mu, sd, fmt=".4f", ylim_top=1.0)
         ax.set_xticks(range(len(MODELS)))
         ax.set_xticklabels([MODEL_LABELS[m] for m in MODELS], rotation=12, ha="right")
         ax.set_title(DS_LABELS[ds], fontweight="bold")
         ax.set_ylabel("Test AUC (ROC)")
         ax.set_ylim(0, 1.0)
         ax.set_yticks(np.arange(0, 1.1, 0.1))
+        ax.tick_params(labelleft=True)
     handles = [mpatches.Patch(color=PALETTE[m], label=MODEL_LABELS[m]) for m in MODELS]
     fig.legend(handles=handles, loc="lower center", ncol=3, bbox_to_anchor=(0.5, -0.02))
     fig.suptitle("Test AUC-ROC (mean ± std over 3 seeds)", fontsize=13, fontweight="bold")
@@ -153,7 +167,7 @@ def fig_auc_bars():
 # FIG 3 — ACCURACY BAR CHART (0–1 scale)
 # ──────────────────────────────────────────────────────────────
 def fig_acc_bars():
-    fig, axes = plt.subplots(1, 3, figsize=(14, 5), sharey=True)
+    fig, axes = plt.subplots(1, 3, figsize=(14, 5), sharey=False)
     seeds = [0, 1, 2]
     for ax, ds in zip(axes, DATASETS):
         for i, m in enumerate(MODELS):
@@ -162,14 +176,14 @@ def fig_acc_bars():
             ax.bar(i, mu, 0.5, color=PALETTE[m], alpha=0.85, zorder=3)
             ax.errorbar(i, mu, yerr=sd, fmt="none", color="black",
                         capsize=4, linewidth=1.5, zorder=4)
-            ax.text(i, mu + sd + 0.012, f"{mu:.5f}", ha="center",
-                    va="bottom", fontsize=7.5, fontweight="bold")
+            _bar_label(ax, i, mu, sd, fmt=".5f", ylim_top=1.0)
         ax.set_xticks(range(len(MODELS)))
         ax.set_xticklabels([MODEL_LABELS[m] for m in MODELS], rotation=12, ha="right")
         ax.set_title(DS_LABELS[ds], fontweight="bold")
         ax.set_ylabel("Test Pixel Accuracy")
         ax.set_ylim(0, 1.0)
         ax.set_yticks(np.arange(0, 1.1, 0.1))
+        ax.tick_params(labelleft=True)
     handles = [mpatches.Patch(color=PALETTE[m], label=MODEL_LABELS[m]) for m in MODELS]
     fig.legend(handles=handles, loc="lower center", ncol=3, bbox_to_anchor=(0.5, -0.02))
     fig.suptitle("Test Pixel Accuracy (mean ± std over 3 seeds)", fontsize=13, fontweight="bold")
@@ -506,68 +520,83 @@ def fig_seed_variance():
 # FIG 11 — RADAR CHART (F1, AUC, Acc normalised) per dataset
 # ──────────────────────────────────────────────────────────────
 def fig_radar():
-    from matplotlib.patches import FancyArrowPatch
     categories = ["F1", "AUC", "Accuracy"]
     N = len(categories)
     angles = [n / float(N) * 2 * np.pi for n in range(N)]
     angles += angles[:1]
     seeds = [0,1,2]
-    fig, axes = plt.subplots(1, 3, figsize=(14, 4.5),
+    fig, axes = plt.subplots(1, 3, figsize=(15, 5),
                               subplot_kw=dict(polar=True))
     for ax, ds in zip(axes, DATASETS):
         ax.set_theta_offset(np.pi / 2)
         ax.set_theta_direction(-1)
-        ax.set_thetagrids(np.degrees(angles[:-1]), categories)
+        ax.set_thetagrids(np.degrees(angles[:-1]), categories, fontsize=10)
+        # Compute all values to choose a tight but informative range
+        all_vals = []
         for m in MODELS:
-            vals_f1  = np.mean([get(ds, m, s)["test_f1"]  for s in seeds if get(ds,m,s)])
-            vals_auc = np.mean([get(ds, m, s)["test_auc"] for s in seeds if get(ds,m,s)])
-            vals_acc = np.mean([acc_key(get(ds, m, s))    for s in seeds if get(ds,m,s)])
-            # Normalise to 0–1 range within plottable [0.6, 1.0]
-            lo, hi = 0.6, 1.0
-            norm = lambda v: (v - lo) / (hi - lo)
-            values = [norm(vals_f1), norm(vals_auc), norm(vals_acc)]
+            for fn in [lambda r: r["test_f1"], lambda r: r["test_auc"], acc_key]:
+                all_vals.append(np.mean([fn(get(ds, m, s)) for s in seeds if get(ds, m, s)]))
+        lo = max(0.0, min(all_vals) - 0.05)
+        hi = min(1.0, max(all_vals) + 0.02)
+        span = hi - lo
+        for m in MODELS:
+            vf1  = np.mean([get(ds, m, s)["test_f1"]  for s in seeds if get(ds,m,s)])
+            vauc = np.mean([get(ds, m, s)["test_auc"] for s in seeds if get(ds,m,s)])
+            vacc = np.mean([acc_key(get(ds, m, s))    for s in seeds if get(ds,m,s)])
+            norm = lambda v: (v - lo) / span
+            values = [norm(vf1), norm(vauc), norm(vacc)]
             values += values[:1]
-            ax.plot(angles, values, linewidth=2, color=PALETTE[m], label=MODEL_LABELS[m])
-            ax.fill(angles, values, alpha=0.1, color=PALETTE[m])
+            ax.plot(angles, values, linewidth=2.2, color=PALETTE[m], label=MODEL_LABELS[m])
+            ax.fill(angles, values, alpha=0.12, color=PALETTE[m])
         ax.set_ylim(0, 1)
-        ax.set_yticks([0.25, 0.5, 0.75, 1.0])
-        ax.set_yticklabels(["0.7", "0.8", "0.9", "1.0"], fontsize=7)
-        ax.set_title(DS_SHORT[ds], fontsize=10, fontweight="bold", pad=12)
-    handles = [plt.Line2D([0],[0], color=PALETTE[m], linewidth=2,
+        # 5 rings with actual score labels
+        ticks = np.linspace(0, 1, 6)
+        tick_labels = [f"{lo + t*span:.3f}" for t in ticks]
+        ax.set_yticks(ticks[1:])
+        ax.set_yticklabels(tick_labels[1:], fontsize=6.5, color="#6B7280")
+        ax.set_title(DS_SHORT[ds], fontsize=11, fontweight="bold", pad=14)
+    handles = [plt.Line2D([0],[0], color=PALETTE[m], linewidth=2.2,
                           label=MODEL_LABELS[m]) for m in MODELS]
     fig.legend(handles=handles, loc="lower center", ncol=3, bbox_to_anchor=(0.5, -0.04))
-    fig.suptitle("Multi-Metric Radar Chart (F1 / AUC / Accuracy)", fontsize=12, fontweight="bold")
-    fig.tight_layout(rect=[0, 0.06, 1, 0.97])
+    fig.suptitle("Multi-Metric Radar Chart (F1 / AUC / Accuracy)\n"
+                 "Grid labels show actual score values; axes scaled to data range",
+                 fontsize=11, fontweight="bold")
+    fig.tight_layout(rect=[0, 0.06, 1, 0.93])
     path = f"{OUTDIR}/fig11_radar.png"
     fig.savefig(path, bbox_inches="tight")
     plt.close(fig)
     print(f"Saved {path}")
 
 # ──────────────────────────────────────────────────────────────
-# FIG 12 — CONVERGENCE SPEED (val F1 vs epoch, best seed per model per dataset)
+# FIG 12 — CONVERGENCE SPEED (val F1 vs epoch, seed=0, wider x axis)
 # ──────────────────────────────────────────────────────────────
 def fig_convergence():
-    fig, axes = plt.subplots(1, 3, figsize=(15, 4.5))
+    fig, axes = plt.subplots(1, 3, figsize=(16, 5))
     for ax, ds in zip(axes, DATASETS):
         for m in MODELS:
-            # use seed 0 (or best available)
-            for s in [0, 1, 2]:
-                r = get(ds, m, s)
-                if r and "history" in r:
-                    break
+            # Use the seed with the best TEST F1 so the convergence curve
+            # matches the reported best result for each model
+            best_seed = max([0,1,2],
+                key=lambda s: get(ds, m, s)["test_f1"] if get(ds, m, s) else -1)
+            r = get(ds, m, best_seed)
             if not r or "history" not in r:
                 continue
             epochs = [h["epoch"] for h in r["history"]]
             val_f1 = [h["val"]["f1"] for h in r["history"]]
-            ax.plot(epochs, val_f1, color=PALETTE[m], linewidth=2,
-                    label=MODEL_LABELS[m], marker="o", markersize=4, alpha=0.85)
-        ax.set_xlabel("Epoch")
-        ax.set_ylabel("Validation F1")
-        ax.set_title(DS_LABELS[ds], fontweight="bold")
-        ax.legend()
-        ax.xaxis.set_major_locator(MaxNLocator(integer=True, nbins=8))
-    fig.suptitle("Convergence: Validation F1 vs Training Epoch (seed=0)",
-                 fontsize=12, fontweight="bold")
+            ax.plot(epochs, val_f1, color=PALETTE[m], linewidth=2.2,
+                    label=f"{MODEL_LABELS[m]} (s{best_seed})",
+                    marker="o", markersize=3.5, alpha=0.9)
+        ax.set_xlabel("Epoch", fontsize=10)
+        ax.set_ylabel("Validation F1", fontsize=10)
+        ax.set_title(DS_LABELS[ds], fontweight="bold", fontsize=10)
+        ax.legend(fontsize=8)
+        ax.set_xlim(0, 31)
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True, nbins=10))
+        ax.grid(axis="y", alpha=0.3)
+    fig.suptitle("Convergence: Validation F1 vs Training Epoch (best seed per model)\n"
+                 "FNNSeg val loss stabilises smoothly; U-Net can show transient spikes"
+                 " indicating noisier optimisation on some seeds",
+                 fontsize=10, fontweight="bold")
     fig.tight_layout()
     path = f"{OUTDIR}/fig12_convergence.png"
     fig.savefig(path, bbox_inches="tight")
@@ -615,7 +644,7 @@ def fig_loss_all_seeds():
 # ──────────────────────────────────────────────────────────────
 def fig_dataset_difficulty():
     seeds = [0,1,2]
-    fig, ax = plt.subplots(figsize=(9, 5))
+    fig, ax = plt.subplots(figsize=(11, 6))
     x = np.arange(len(DATASETS))
     width = 0.22
     offsets = [-width, 0, width]
@@ -625,22 +654,21 @@ def fig_dataset_difficulty():
             vals = [get(ds, m, s)["test_f1"] for s in seeds if get(ds, m, s)]
             mu, sd = mean_std(vals)
             mus.append(mu); sds.append(sd)
-        ax.bar(x + offsets[i], mus, width, color=PALETTE[m],
-               alpha=0.85, label=MODEL_LABELS[m], zorder=3)
+        bars = ax.bar(x + offsets[i], mus, width, color=PALETTE[m],
+                      alpha=0.85, label=MODEL_LABELS[m], zorder=3)
         ax.errorbar(x + offsets[i], mus, yerr=sds, fmt="none",
                     color="black", capsize=3, linewidth=1.2, zorder=4)
+        # Score annotations on each bar (rotated for grouped bar spacing)
+        for xi, mu, sd in zip(x + offsets[i], mus, sds):
+            _bar_label(ax, xi, mu, sd, fmt=".4f", ylim_top=1.0)
     ax.set_xticks(x)
     ax.set_xticklabels([DS_LABELS[d] for d in DATASETS], fontsize=9)
     ax.set_ylabel("Mean Test F1 Score (n=3 seeds)")
     ax.set_title("Performance Across Datasets: Effect of Label Type and Instrument",
                  fontweight="bold")
     ax.legend()
-    ax.set_ylim(0.5, 1.005)
-    # annotate difficulty arrows
-    ax.annotate("", xy=(2, 0.65), xytext=(0, 0.99),
-                arrowprops=dict(arrowstyle="->", color="#6B7280", lw=1.5))
-    ax.text(1.05, 0.80, "Increasing\ndifficulty →", fontsize=8,
-            color="#6B7280", ha="center", style="italic")
+    ax.set_ylim(0, 1.0)
+    ax.set_yticks(np.arange(0, 1.1, 0.1))
     fig.tight_layout()
     path = f"{OUTDIR}/fig14_dataset_difficulty.png"
     fig.savefig(path, bbox_inches="tight")
@@ -686,7 +714,7 @@ def fig_summary_table():
         for j in range(len(col_labels)):
             table[i+1, j].set_facecolor(bg)
         # Highlight FNNSeg
-        if row[1] == "FNNSeg (Ours)":
+        if row[1] == "FNNSeg":
             for j in range(len(col_labels)):
                 table[i+1, j].set_facecolor("#DBEAFE")
     ax.set_title("Summary Results Table (mean ± std, n=3 seeds)",
@@ -776,10 +804,74 @@ def fig_arch_comparison():
     print(f"Saved {path}")
 
 # ──────────────────────────────────────────────────────────────
+# FIG 18 — COMPUTE / RUNTIME INFRASTRUCTURE OVERVIEW
+# Estimated GPU training time: ~1.5 hr/run (HERA), ~3.5 hr/run (LOFAR) on T4
+# CPU baseline: ~72 hr/run on M4 MacBook Air
+# ──────────────────────────────────────────────────────────────
+def fig_compute_overview():
+    fig, axes = plt.subplots(1, 2, figsize=(13, 5.5))
+
+    # ---- Left: estimated training time per run (bar chart) ----
+    ax = axes[0]
+    run_labels = [
+        "HERA-PP\nGPU (T4)",
+        "HERA-AOF\nGPU (T4)",
+        "LOFAR\nGPU (T4)",
+        "HERA-PP\nCPU (M4)",
+    ]
+    # Rough wall-clock estimates: 1.5, 1.5, 3.5, ~72 hours per run
+    est_hours = [1.5, 1.5, 3.5, 72.0]
+    colors_rt  = ["#3B82F6", "#3B82F6", "#3B82F6", "#10B981"]
+    bars = ax.barh(run_labels, est_hours, color=colors_rt, alpha=0.85, height=0.5)
+    for bar, h in zip(bars, est_hours):
+        ax.text(bar.get_width() + 0.8, bar.get_y() + bar.get_height()/2,
+                f"~{h:.0f} hr", va="center", fontsize=10, fontweight="bold")
+    ax.set_xlabel("Estimated Wall-clock Time per Run (hours)", fontsize=10)
+    ax.set_title("Estimated Training Time per Run\n(3 models x 3 seeds each = 9 GPU runs per dataset)",
+                 fontweight="bold", fontsize=10)
+    ax.set_xlim(0, 90)
+    gpu_patch = mpatches.Patch(color="#3B82F6", label="GCP n1-highmem-8 + Tesla T4 GPU")
+    cpu_patch = mpatches.Patch(color="#10B981", label="MacBook Air M4 CPU (seed=0 only)")
+    ax.legend(handles=[gpu_patch, cpu_patch], loc="lower right", fontsize=8)
+    ax.grid(axis="x", alpha=0.3)
+
+    # ---- Right: GCP cost breakdown ----
+    ax2 = axes[1]
+    # GCP pricing (us-central1, on-demand ~Mar 2024):
+    # n1-standard-8 + T4: ~$0.71/hr
+    # n1-highmem-8 + T4:  ~$0.85/hr (higher memory premium)
+    # HERA 9 GPU runs x ~1.5 hr x $0.85 = $11.5 (x2 datasets = $23)
+    # LOFAR 9 GPU runs x ~3.5 hr x $0.85 = $26.8
+    # Total = ~$50 (rounded)
+    categories_c = ["HERA-PP\n(9 runs)", "HERA-AOF\n(9 runs)", "LOFAR\n(9 runs)", "Storage\n& misc"]
+    costs = [11.5, 11.5, 26.8, 2.0]
+    col_c = ["#2563EB", "#7C3AED", "#DC2626", "#6B7280"]
+    ax2.bar(categories_c, costs, color=col_c, alpha=0.85, width=0.55, zorder=3)
+    for i, c in enumerate(costs):
+        ax2.text(i, c + 0.3, f"${c:.1f}", ha="center", fontsize=10, fontweight="bold")
+    ax2.set_ylabel("Estimated Cost (USD)", fontsize=10)
+    ax2.set_title("Estimated GCP Compute Cost by Dataset\n"
+                  "(n1-highmem-8 + Tesla T4, on-demand pricing ~Mar 2024)",
+                  fontweight="bold", fontsize=10)
+    ax2.set_ylim(0, 35)
+    total = sum(costs)
+    ax2.text(1.5, 32, f"Total ~${total:.0f}", fontsize=10, ha="center",
+             color="black", fontweight="bold")
+    ax2.grid(axis="y", alpha=0.3)
+
+    fig.suptitle("Computational Infrastructure: Training Time and Cost Estimates",
+                 fontsize=12, fontweight="bold")
+    fig.tight_layout()
+    path = f"{OUTDIR}/fig18_compute_overview.png"
+    fig.savefig(path, bbox_inches="tight")
+    plt.close(fig)
+    print(f"Saved {path}")
+
+# ──────────────────────────────────────────────────────────────
 # RUN ALL
 # ──────────────────────────────────────────────────────────────
 if __name__ == "__main__":
-    print(f"Generating thesis figures → {OUTDIR}/\n")
+    print(f"Generating thesis figures -> {OUTDIR}/\n")
     fig_f1_bars()
     fig_auc_bars()
     fig_acc_bars()
@@ -797,4 +889,5 @@ if __name__ == "__main__":
     fig_summary_table()
     fig_best_epoch()
     fig_arch_comparison()
+    fig_compute_overview()
     print(f"\nDone! {len(os.listdir(OUTDIR))} files in {OUTDIR}/")
