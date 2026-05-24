@@ -593,9 +593,7 @@ def fig_convergence():
         ax.set_xlim(0, 31)
         ax.xaxis.set_major_locator(MaxNLocator(integer=True, nbins=10))
         ax.grid(axis="y", alpha=0.3)
-    fig.suptitle("Convergence: Validation F1 vs Training Epoch (best seed per model)\n"
-                 "FNNSeg val loss stabilises smoothly; U-Net can show transient spikes"
-                 " indicating noisier optimisation on some seeds",
+    fig.suptitle("Convergence: Validation F1 vs Training Epoch (best seed per model)",
                  fontsize=10, fontweight="bold")
     fig.tight_layout()
     path = f"{OUTDIR}/fig12_convergence.png"
