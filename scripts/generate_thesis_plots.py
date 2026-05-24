@@ -805,8 +805,18 @@ def fig_arch_comparison():
 
 # ──────────────────────────────────────────────────────────────
 # FIG 18 — COMPUTE / RUNTIME INFRASTRUCTURE OVERVIEW
-# Estimated GPU training time: ~1.5 hr/run (HERA), ~3.5 hr/run (LOFAR) on T4
-# CPU baseline: ~72 hr/run on M4 MacBook Air
+# Actual GPU training time: ~2 hr/run (HERA), ~4 hr/run (LOFAR) on T4
+# CPU baseline: ~72 hr/run on M4 MacBook Air (HERA-PP seed=0 only)
+# Instance types:
+#   HERA-PP seeds 1-2 + HERA-AOF seeds 0-2: n1-standard-8 + T4 ($0.38+$0.35=$0.73/hr)
+#   LOFAR fnn_seg seed=0: n1-standard-8 + T4 ($0.73/hr)
+#   LOFAR remaining 8 runs: n1-highmem-8 + T4 ($0.53+$0.35=$0.88/hr)
+# Cost breakdown:
+#   HERA-PP:  6 GPU runs x 2hr x $0.73 = $8.8
+#   HERA-AOF: 9 GPU runs x 2hr x $0.73 = $13.1
+#   LOFAR:    1 run x 4hr x $0.73 + 8 runs x 4hr x $0.88 = $2.9 + $28.2 = $31.1
+#   Storage:  ~$2.0
+#   Total:    ~$55
 # ──────────────────────────────────────────────────────────────
 def fig_compute_overview():
     fig, axes = plt.subplots(1, 2, figsize=(13, 5.5))
@@ -814,14 +824,15 @@ def fig_compute_overview():
     # ---- Left: estimated training time per run (bar chart) ----
     ax = axes[0]
     run_labels = [
-        "HERA-PP\nGPU (T4)",
-        "HERA-AOF\nGPU (T4)",
-        "LOFAR\nGPU (T4)",
-        "HERA-PP\nCPU (M4)",
+        "HERA-PP\nGPU (n1-std-8 + T4)",
+        "HERA-AOF\nGPU (n1-std-8 + T4)",
+        "LOFAR\nGPU (n1-std-8 + T4)",
+        "LOFAR\nGPU (n1-himem-8 + T4)",
+        "HERA-PP\nCPU (MacBook M4)",
     ]
-    # Rough wall-clock estimates: 1.5, 1.5, 3.5, ~72 hours per run
-    est_hours = [1.5, 1.5, 3.5, 72.0]
-    colors_rt  = ["#3B82F6", "#3B82F6", "#3B82F6", "#10B981"]
+    # Actual wall-clock: ~2hr (HERA), ~4hr (LOFAR), ~72hr (CPU seed=0)
+    est_hours = [2.0, 2.0, 4.0, 4.0, 72.0]
+    colors_rt  = ["#3B82F6", "#3B82F6", "#60A5FA", "#1D4ED8", "#10B981"]
     bars = ax.barh(run_labels, est_hours, color=colors_rt, alpha=0.85, height=0.5)
     for bar, h in zip(bars, est_hours):
         ax.text(bar.get_width() + 0.8, bar.get_y() + bar.get_height()/2,
@@ -830,32 +841,33 @@ def fig_compute_overview():
     ax.set_title("Estimated Training Time per Run\n(3 models x 3 seeds each = 9 GPU runs per dataset)",
                  fontweight="bold", fontsize=10)
     ax.set_xlim(0, 90)
-    gpu_patch = mpatches.Patch(color="#3B82F6", label="GCP n1-highmem-8 + Tesla T4 GPU")
-    cpu_patch = mpatches.Patch(color="#10B981", label="MacBook Air M4 CPU (seed=0 only)")
-    ax.legend(handles=[gpu_patch, cpu_patch], loc="lower right", fontsize=8)
+    std_p   = mpatches.Patch(color="#3B82F6", label="n1-standard-8 + Tesla T4 ($0.73/hr)")
+    himem_p = mpatches.Patch(color="#1D4ED8", label="n1-highmem-8 + Tesla T4 ($0.88/hr)")
+    cpu_p   = mpatches.Patch(color="#10B981",  label="MacBook Air M4 — free (HERA-PP seed=0)")
+    ax.legend(handles=[std_p, himem_p, cpu_p], loc="lower right", fontsize=7.5)
     ax.grid(axis="x", alpha=0.3)
 
     # ---- Right: GCP cost breakdown ----
     ax2 = axes[1]
-    # GCP pricing (us-central1, on-demand ~Mar 2024):
-    # n1-standard-8 + T4: ~$0.71/hr
-    # n1-highmem-8 + T4:  ~$0.85/hr (higher memory premium)
-    # HERA 9 GPU runs x ~1.5 hr x $0.85 = $11.5 (x2 datasets = $23)
-    # LOFAR 9 GPU runs x ~3.5 hr x $0.85 = $26.8
-    # Total = ~$50 (rounded)
-    categories_c = ["HERA-PP\n(9 runs)", "HERA-AOF\n(9 runs)", "LOFAR\n(9 runs)", "Storage\n& misc"]
-    costs = [11.5, 11.5, 26.8, 2.0]
-    col_c = ["#2563EB", "#7C3AED", "#DC2626", "#6B7280"]
+    # GCP pricing (us-central1, on-demand):
+    #   n1-standard-8 + T4: $0.73/hr  — used for HERA-PP (6 runs) + HERA-AOF (9 runs) + LOFAR fnn_seg seed=0
+    #   n1-highmem-8 + T4:  $0.88/hr  — used for LOFAR remaining 8 runs
+    # HERA-PP:  6 GPU runs x 2hr x $0.73 = $8.8
+    # HERA-AOF: 9 GPU runs x 2hr x $0.73 = $13.1
+    # LOFAR:    1 x 4hr x $0.73 + 8 x 4hr x $0.88 = $31.1
+    categories_c = ["HERA-PP\n6 runs\nn1-std-8", "HERA-AOF\n9 runs\nn1-std-8", "LOFAR\n1 run\nn1-std-8", "LOFAR\n8 runs\nn1-himem-8", "Storage\n& misc"]
+    costs = [8.8, 13.1, 2.9, 28.2, 2.0]
+    col_c = ["#2563EB", "#7C3AED", "#60A5FA", "#DC2626", "#6B7280"]
     ax2.bar(categories_c, costs, color=col_c, alpha=0.85, width=0.55, zorder=3)
     for i, c in enumerate(costs):
         ax2.text(i, c + 0.3, f"${c:.1f}", ha="center", fontsize=10, fontweight="bold")
     ax2.set_ylabel("Estimated Cost (USD)", fontsize=10)
-    ax2.set_title("Estimated GCP Compute Cost by Dataset\n"
-                  "(n1-highmem-8 + Tesla T4, on-demand pricing ~Mar 2024)",
+    ax2.set_title("Estimated GCP Compute Cost by Dataset & Instance Type\n"
+                  "(us-central1, on-demand pricing)",
                   fontweight="bold", fontsize=10)
-    ax2.set_ylim(0, 35)
+    ax2.set_ylim(0, 38)
     total = sum(costs)
-    ax2.text(1.5, 32, f"Total ~${total:.0f}", fontsize=10, ha="center",
+    ax2.text(2, 35.5, f"Total ~${int(round(total))}", fontsize=10, ha="center",
              color="black", fontweight="bold")
     ax2.grid(axis="y", alpha=0.3)
 
