@@ -73,7 +73,7 @@ FNNSeg follows a U-Net-style encoder--decoder with $D=3$ downsampling stages, a 
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.85\linewidth]{figs/thesis/fig19_fnnseg_arch.png}
+\includegraphics[width=0.85\linewidth]{../figs/thesis/fig19_fnnseg_arch.png}
 \caption{FNNSeg architecture: a Fibonacci-scheduled U-Net built from recursive FractalBlocks, with the encoder/decoder channel widths and per-stage FractalBlock depth shown at bottom (218,609 parameters for 2-channel HERA input; 218,465 for 1-channel LOFAR input).}
 \label{fig:arch}
 \end{figure}
@@ -84,7 +84,7 @@ A FractalBlock of recursion depth $d$ contains two parallel branches: a shallow 
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.85\linewidth]{figs/thesis/fig20_fractal_block.png}
+\includegraphics[width=0.85\linewidth]{../figs/thesis/fig20_fractal_block.png}
 \caption{FractalBlock recursion tree at depth $d=3$: each non-leaf node spawns two parallel paths (a shallow ConvBlock and a deeper recursive FractalBlock), concatenated and projected through a learned $1\times1$ convolution at every merge level.}
 \label{fig:fractalblock}
 \end{figure}
@@ -121,7 +121,7 @@ Per the project's compute-planning record (Figure~\ref{fig:compute}), the CPU-tr
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.95\linewidth]{figs/thesis/fig18_compute_overview.png}
+\includegraphics[width=0.95\linewidth]{../figs/thesis/fig18_compute_overview.png}
 \caption{Computational infrastructure. Left: estimated wall-clock time per run by dataset and hardware. Right: estimated Google Cloud Platform compute cost by dataset and instance type (on-demand pricing, \texttt{us-central1}).}
 \label{fig:compute}
 \end{figure}
@@ -176,7 +176,7 @@ FNNSeg attains the highest F1 with the fewest parameters, beating U-Net on every
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.9\linewidth]{figs/thesis/fig8_comparison_dutoit.png}
+\includegraphics[width=0.9\linewidth]{../figs/thesis/fig8_comparison_dutoit.png}
 \caption{Test F1 on HERA-PP: our three architectures (mean $\pm$ std, coloured bars) against all eight architectures benchmarked by \citet{dutoit2023} on the same data (grey bars, best reported run).}
 \label{fig:dutoit}
 \end{figure}
@@ -217,7 +217,7 @@ Across all three datasets, FNNSeg's relative F1 advantage over ResU-Net grows wi
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.85\linewidth]{figs/thesis/fig7_pareto_efficiency.png}
+\includegraphics[width=0.85\linewidth]{../figs/thesis/fig7_pareto_efficiency.png}
 \caption{Parameter efficiency on HERA-PP: test F1 vs. parameter count (log scale) for our three architectures (circles) against all eight \citet{dutoit2023} baselines (triangles). FNNSeg attains the best F1 of any architecture below 700K parameters.}
 \label{fig:pareto}
 \end{figure}
@@ -228,14 +228,14 @@ Across all three datasets, FNNSeg's relative F1 advantage over ResU-Net grows wi
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.7\linewidth]{figs/thesis/fig9_cross_dataset_heatmap.png}
+\includegraphics[width=0.7\linewidth]{../figs/thesis/fig9_cross_dataset_heatmap.png}
 \caption{Mean test F1 for all three architectures across all three datasets ($n=3$ seeds each).}
 \label{fig:heatmap}
 \end{figure}
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.95\linewidth]{figs/thesis/fig10_seed_variance.png}
+\includegraphics[width=0.95\linewidth]{../figs/thesis/fig10_seed_variance.png}
 \caption{Distribution of test F1 across the three random seeds, per architecture and dataset. FNNSeg's interquartile range is visibly narrower than ResU-Net's on HERA-PP and LOFAR.}
 \label{fig:seedvar}
 \end{figure}
@@ -244,7 +244,7 @@ Across all three datasets, FNNSeg's relative F1 advantage over ResU-Net grows wi
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.85\linewidth]{figs/thesis/fig14_dataset_difficulty.png}
+\includegraphics[width=0.85\linewidth]{../figs/thesis/fig14_dataset_difficulty.png}
 \caption{Mean test F1 by architecture and dataset, highlighting the label-quality gap (HERA-PP vs. HERA-AOF, same underlying observations) and the instrument/difficulty gap (HERA vs. LOFAR).}
 \label{fig:difficulty}
 \end{figure}
@@ -403,32 +403,32 @@ ResU-Net & 2 & 1,614,833 & 0.994324 & 0.6174 & 0.9217 \\
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.7\linewidth]{figs/fnn_architecture.png}
+\includegraphics[width=0.7\linewidth]{../figs/fnn_architecture.png}
 \caption{FNNSeg architecture diagram.}
 \end{figure}
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.8\linewidth]{figs/learning_curves_seg.png}
+\includegraphics[width=0.8\linewidth]{../figs/learning_curves_seg.png}
 \caption{Per-model learning curves (HERA-PP segmentation).}
 \end{figure}
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.7\linewidth]{figs/pareto_seg.png}
+\includegraphics[width=0.7\linewidth]{../figs/pareto_seg.png}
 \caption{Parameter-efficiency Pareto plot against all \citet{dutoit2023} baselines.}
 \end{figure}
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.48\linewidth]{figs/seg_f1_by_model.png}
-\includegraphics[width=0.48\linewidth]{figs/seg_iou_by_model.png}
+\includegraphics[width=0.48\linewidth]{../figs/seg_f1_by_model.png}
+\includegraphics[width=0.48\linewidth]{../figs/seg_iou_by_model.png}
 \caption{Per-model F1 (left) and IoU (right) comparison across datasets.}
 \end{figure}
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.8\linewidth]{figs/seg_predictions.png}
+\includegraphics[width=0.8\linewidth]{../figs/seg_predictions.png}
 \caption{Qualitative segmentation predictions (HERA-PP test set).}
 \end{figure}
 
@@ -438,7 +438,7 @@ Before committing to the compute-intensive real-telescope experiments (Sections 
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.8\linewidth]{figs/spectrogram_samples.png}
+\includegraphics[width=0.8\linewidth]{../figs/spectrogram_samples.png}
 \caption{Example synthetic spectrograms for each of the five injected RFI morphology types used in this appendix (narrowband, time-burst, broadband, diagonal, rectangle), alongside their ground-truth binary masks.}
 \label{fig:specsamples}
 \end{figure}
@@ -466,7 +466,7 @@ Non-fractal, standard convs & No & No & 344,817 & 0.9663 $\pm$ 0.0062 & 0.9828 $
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.8\linewidth]{figs/ablation_fib_vs_sep.png}
+\includegraphics[width=0.8\linewidth]{../figs/ablation_fib_vs_sep.png}
 \caption{IoU/F1 by Fibonacci/separable configuration, synthetic segmentation task.}
 \end{figure}
 
@@ -488,7 +488,7 @@ Stages & Base ch & Params & IoU & F1 \\
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.8\linewidth]{figs/ablation_ch_vs_stages.png}
+\includegraphics[width=0.8\linewidth]{../figs/ablation_ch_vs_stages.png}
 \caption{IoU/F1 as a function of encoder stage count and base channel width. Stages = 3, base channels = 16 is the best-performing configuration tested, despite not being the largest.}
 \end{figure}
 
@@ -509,7 +509,7 @@ Drop-path rate & IoU & F1 \\
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.8\linewidth]{figs/ablation_dp_vs_stages.png}
+\includegraphics[width=0.8\linewidth]{../figs/ablation_dp_vs_stages.png}
 \caption{IoU/F1 vs. drop-path rate. Performance degrades monotonically with drop-path rate at this training budget, motivating \texttt{drop\_path\_rate = 0} in Sections 3--6.}
 \end{figure}
 
@@ -539,7 +539,7 @@ ResNet-cls & 874,458 & 0.323 $\pm$ 0.033 \\
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.7\linewidth]{figs/cls_acc_by_model.png}
+\includegraphics[width=0.7\linewidth]{../figs/cls_acc_by_model.png}
 \caption{Validation accuracy by architecture on the 5-way morphology classification task.}
 \end{figure}
 
@@ -566,14 +566,14 @@ fib=T, sep=F, dp=0.0, ch=32 & 1,301,410 & 0.9641 $\pm$ 0.0084 & 2.63 $\pm$ 2.94 
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.48\linewidth]{figs/inpaint_iou_bars.png}
-\includegraphics[width=0.48\linewidth]{figs/inpaint_psnr_bars.png}
+\includegraphics[width=0.48\linewidth]{../figs/inpaint_iou_bars.png}
+\includegraphics[width=0.48\linewidth]{../figs/inpaint_psnr_bars.png}
 \caption{Mask IoU (left) and reconstruction PSNR (right) by FNNInpaint configuration. PSNR shows large cross-seed variance.}
 \end{figure}
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.8\linewidth]{figs/inpaint_predictions.png}
+\includegraphics[width=0.8\linewidth]{../figs/inpaint_predictions.png}
 \caption{Qualitative FNNInpaint predictions: contaminated input, predicted mask, and reconstructed spectrogram against ground truth.}
 \end{figure}
 
@@ -585,7 +585,7 @@ Using the selected FNNSeg configuration, we swept injected-RFI signal-to-noise r
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.7\linewidth]{figs/snr_sweep.png}
+\includegraphics[width=0.7\linewidth]{../figs/snr_sweep.png}
 \caption{Segmentation IoU as a function of injected RFI SNR.}
 \end{figure}
 

@@ -209,3 +209,7 @@ __marimo__/
 # data folders
 # data/
 datafiles/
+
+# arXiv submission bundle (regenerate from doc/PAPER_ARXIV.tex as needed)
+arxiv_submission/
+arxiv_submission.zip

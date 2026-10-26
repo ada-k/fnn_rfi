@@ -242,27 +242,27 @@ Radio frequency interference (RFI) contaminates radio-telescope observations at 
 
 <h2>Appendix B: Supplementary Figures</h2>
 <figure>
-<img src="figs/fnn_architecture.png" alt="FNNSeg architecture diagram" style="max-width:100%;">
+<img src="../figs/fnn_architecture.png" alt="FNNSeg architecture diagram" style="max-width:100%;">
 <figcaption><b>Figure B1.</b> FNNSeg architecture diagram.</figcaption>
 </figure>
 <figure>
-<img src="figs/learning_curves_seg.png" alt="Per-model learning curves" style="max-width:100%;">
+<img src="../figs/learning_curves_seg.png" alt="Per-model learning curves" style="max-width:100%;">
 <figcaption><b>Figure B2.</b> Per-model learning curves (HERA-PP segmentation).</figcaption>
 </figure>
 <figure>
-<img src="figs/pareto_seg.png" alt="Parameter-efficiency Pareto plot" style="max-width:100%;">
+<img src="../figs/pareto_seg.png" alt="Parameter-efficiency Pareto plot" style="max-width:100%;">
 <figcaption><b>Figure B3.</b> Parameter-efficiency Pareto plot against all du Toit et al. (2023) baselines.</figcaption>
 </figure>
 <figure>
-<img src="figs/seg_f1_by_model.png" alt="Per-model F1 comparison" style="max-width:100%;">
+<img src="../figs/seg_f1_by_model.png" alt="Per-model F1 comparison" style="max-width:100%;">
 <figcaption><b>Figure B4.</b> Per-model F1 comparison across datasets.</figcaption>
 </figure>
 <figure>
-<img src="figs/seg_iou_by_model.png" alt="Per-model IoU comparison" style="max-width:100%;">
+<img src="../figs/seg_iou_by_model.png" alt="Per-model IoU comparison" style="max-width:100%;">
 <figcaption><b>Figure B5.</b> Per-model IoU comparison across datasets.</figcaption>
 </figure>
 <figure>
-<img src="figs/seg_predictions.png" alt="Qualitative segmentation predictions" style="max-width:100%;">
+<img src="../figs/seg_predictions.png" alt="Qualitative segmentation predictions" style="max-width:100%;">
 <figcaption><b>Figure B6.</b> Qualitative segmentation predictions (HERA-PP test set).</figcaption>
 </figure>
 
@@ -270,7 +270,7 @@ Radio frequency interference (RFI) contaminates radio-telescope observations at 
 <p>Before committing to the compute-intensive real-telescope experiments (Sections 5–6), we validated FNNSeg's architecture choices and explored two additional task formulations on a synthetic, on-the-fly RFI-injection pipeline (<code>data/synthetic_spectrogram.py</code>, <code>data/inject_rfi.py</code>): single-channel spectrograms with injected contamination drawn from five morphology types (narrowband, time-burst, broadband, diagonal, rectangle; Figure C1), generated deterministically from a seed so that every run is exactly reproducible. All experiments in this appendix use 3 seeds (123, 42, 7), a different seed set from the real-data experiments (0, 1, 2) in Sections 5–6, since this synthetic study was conducted independently and earlier; we flag this explicitly rather than imply a single unified seed protocol.</p>
 
 <figure>
-<img src="figs/spectrogram_samples.png" alt="Example synthetic spectrograms with injected RFI" style="max-width:100%;">
+<img src="../figs/spectrogram_samples.png" alt="Example synthetic spectrograms with injected RFI" style="max-width:100%;">
 <figcaption><b>Figure C1.</b> Example synthetic spectrograms for each of the five injected RFI morphology types used in this appendix (narrowband, time-burst, broadband, diagonal, rectangle), alongside their ground-truth binary masks.</figcaption>
 </figure>
 
@@ -288,7 +288,7 @@ Radio frequency interference (RFI) contaminates radio-telescope observations at 
 <p style="font-size:10pt;font-style:italic;">Non-fractal, standard convs ran with 2 seeds only (123, 7); all other rows use 3.</p>
 
 <figure>
-<img src="figs/ablation_fib_vs_sep.png" alt="Fibonacci vs. separable ablation" style="max-width:100%;">
+<img src="../figs/ablation_fib_vs_sep.png" alt="Fibonacci vs. separable ablation" style="max-width:100%;">
 <figcaption><b>Figure C2.</b> IoU/F1 by Fibonacci/separable configuration, synthetic segmentation task.</figcaption>
 </figure>
 
@@ -303,7 +303,7 @@ Radio frequency interference (RFI) contaminates radio-telescope observations at 
 </table>
 
 <figure>
-<img src="figs/ablation_ch_vs_stages.png" alt="Stage count and base channel width ablation" style="max-width:100%;">
+<img src="../figs/ablation_ch_vs_stages.png" alt="Stage count and base channel width ablation" style="max-width:100%;">
 <figcaption><b>Figure C3.</b> IoU/F1 as a function of encoder stage count and base channel width. Stages = 3, base channels = 16 is the best-performing configuration tested, despite not being the largest.</figcaption>
 </figure>
 
@@ -317,7 +317,7 @@ Radio frequency interference (RFI) contaminates radio-telescope observations at 
 </table>
 
 <figure>
-<img src="figs/ablation_dp_vs_stages.png" alt="Drop-path ablation across stages" style="max-width:100%;">
+<img src="../figs/ablation_dp_vs_stages.png" alt="Drop-path ablation across stages" style="max-width:100%;">
 <figcaption><b>Figure C4.</b> IoU/F1 vs. drop-path rate. Performance degrades monotonically with drop-path rate at this training budget, motivating <code>drop_path_rate = 0</code> in Sections 3–6.</figcaption>
 </figure>
 
@@ -339,7 +339,7 @@ Radio frequency interference (RFI) contaminates radio-telescope observations at 
 </table>
 
 <figure>
-<img src="figs/cls_acc_by_model.png" alt="Classification accuracy by model" style="max-width:100%;">
+<img src="../figs/cls_acc_by_model.png" alt="Classification accuracy by model" style="max-width:100%;">
 <figcaption><b>Figure C5.</b> Validation accuracy by architecture on the 5-way morphology classification task.</figcaption>
 </figure>
 
@@ -358,17 +358,17 @@ Radio frequency interference (RFI) contaminates radio-telescope observations at 
 </table>
 
 <figure>
-<img src="figs/inpaint_iou_bars.png" alt="Inpainting mask IoU by configuration" style="max-width:100%;">
+<img src="../figs/inpaint_iou_bars.png" alt="Inpainting mask IoU by configuration" style="max-width:100%;">
 <figcaption><b>Figure C6.</b> Mask IoU by FNNInpaint configuration.</figcaption>
 </figure>
 
 <figure>
-<img src="figs/inpaint_psnr_bars.png" alt="Inpainting PSNR by configuration" style="max-width:100%;">
+<img src="../figs/inpaint_psnr_bars.png" alt="Inpainting PSNR by configuration" style="max-width:100%;">
 <figcaption><b>Figure C7.</b> Reconstruction PSNR by FNNInpaint configuration, with large cross-seed variance.</figcaption>
 </figure>
 
 <figure>
-<img src="figs/inpaint_predictions.png" alt="Qualitative inpainting predictions" style="max-width:100%;">
+<img src="../figs/inpaint_predictions.png" alt="Qualitative inpainting predictions" style="max-width:100%;">
 <figcaption><b>Figure C8.</b> Qualitative FNNInpaint predictions: contaminated input, predicted mask, and reconstructed spectrogram against ground truth.</figcaption>
 </figure>
 
@@ -378,7 +378,7 @@ Radio frequency interference (RFI) contaminates radio-telescope observations at 
 <p>Using the selected FNNSeg configuration, we swept injected-RFI signal-to-noise ratio (SNR) from 0.5 to 20 on the synthetic segmentation task (single seed).</p>
 
 <figure>
-<img src="figs/snr_sweep.png" alt="IoU vs. injected RFI SNR" style="max-width:100%;">
+<img src="../figs/snr_sweep.png" alt="IoU vs. injected RFI SNR" style="max-width:100%;">
 <figcaption><b>Figure C9.</b> Segmentation IoU as a function of injected RFI SNR.</figcaption>
 </figure>
 

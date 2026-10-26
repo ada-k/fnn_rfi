@@ -17,29 +17,64 @@ Radio-frequency interference (RFI) degrades sensitivity across modern radio tele
 
 ```
 fnn_rfi/
+├── doc/
+│   ├── PAPER_ARXIV.md             # Condensed paper (Markdown source)
+│   ├── PAPER_ARXIV.tex            # Condensed paper (LaTeX, arXiv-ready)
+│   ├── PAPER_ARXIV.html           # Condensed paper (HTML, for easy local preview)
+│   ├── THESIS_DRAFT_v2.md         # Full UEL dissertation draft
+│   └── ada_kibet_research_proposal-2.pdf
 ├── data/
-│   └── synthetic_spectrogram.py   # On-the-fly RFI injection dataset (5 morphology types)
+│   ├── synthetic_spectrogram.py   # On-the-fly RFI injection dataset (5 morphology types)
+│   ├── inject_rfi.py              # Per-morphology injection functions
+│   ├── hera_dataset.py            # HERA-PP/HERA-AOF dataset loader
+│   ├── extract_spectrograms.py    # Raw-archive to spectrogram extraction
+│   └── prepare_splits.py          # Train/val/test split construction
 ├── models/
 │   ├── fnn.py                     # FNN classifier (fractal blocks + Fibonacci channels)
 │   ├── fnn_seg.py                 # FNNSeg: fractal U-Net for segmentation
+│   ├── fnn_inpaint.py             # FNNInpaint: dual-head detection + restoration variant
 │   ├── unet.py                    # Standard U-Net baseline
+│   ├── resnet_baseline.py         # ResU-Net / ResNet-classifier baselines
 │   ├── cnn.py                     # SimpleCNN baseline
 │   ├── rnn.py                     # LSTM baseline
 │   └── transformer.py             # Tiny Vision Transformer baseline
 ├── experiments/
 │   ├── train.py                   # Unified training script (train + val + metrics)
+│   ├── train_inpaint.py           # FNNInpaint training loop
+│   ├── run_all_experiments.py     # Experiment-grid driver
+│   ├── run_grid.py                # Hyperparameter grid runner
 │   ├── evaluate.py                # Metrics: IoU, Dice, F1, PSNR, SSIM
+│   ├── visualize.py                # Plotting helpers
 │   └── utils.py                   # Model factory, dataloader factory, seeding
 ├── scripts/
+│   ├── train_hera.py              # Real-telescope (HERA/LOFAR) training entrypoint
+│   ├── run_hera_experiments.sh    # Full 27-run HERA/LOFAR experiment driver
+│   ├── run_snr_sweep.py           # Synthetic-data SNR robustness sweep
+│   ├── aggregate_results.py       # Collects per-run results.json into aggregated_results.json
+│   ├── eval_hera.py               # Evaluation on held-out HERA/LOFAR test sets
+│   ├── count_flops.py             # FLOPs/parameter-count accounting
 │   ├── benchmark.py               # Parameter counts + CPU latency comparison table
-│   ├── run_all.sh                 # End-to-end experiment runner
+│   ├── extract_benchmarks.py      # Parses du Toit et al. (2023) benchmark CSV
+│   ├── generate_arch_diagrams.py  # Architecture diagram figures
+│   ├── generate_raster_plots.py   # Result bar-chart/plot figures
+│   ├── generate_thesis_plots.py   # Full thesis figure set (figs/thesis/)
+│   ├── pareto_plot.py             # Parameter-efficiency Pareto plots
+│   ├── rerun_failed.py            # Re-runs any failed/incomplete experiment configs
 │   ├── aoflagger_wrapper.py       # Converts AOFlagger outputs to training masks
 │   ├── test_models.py             # Quick forward-pass smoke test
+│   ├── test_hera_loader.py        # Dataset-loader smoke test
 │   ├── train_seg.py               # Segmentation training helper
-│   └── train_toy.py               # Toy training helper
+│   ├── train_toy.py               # Toy training helper
+│   ├── interim_viz.py             # Interim/in-progress visualisation (superseded by generate_thesis_plots.py)
+│   └── run_all.sh                 # End-to-end experiment runner
+├── figs/                          # Generated figures (synthetic-data ablation/classification/inpainting + figs/thesis/ for the real-data study)
+├── results/hera/                  # Per-run results.json + best_model.pt checkpoints (27 runs)
+├── logs/hera/                     # Per-run training logs
 └── tools/
     └── aoflagger_docker/          # Dockerfile + helper to build AOFlagger in a container
 ```
+
+The condensed paper (`doc/PAPER_ARXIV.*`) is the arXiv-submission version of this work; `doc/THESIS_DRAFT_v2.md` is the full UEL dissertation it is derived from. An arXiv-ready submission bundle (`main.tex` + all referenced figures) can be regenerated at any time from `doc/PAPER_ARXIV.tex` and is not committed to version control (see `.gitignore`).
 
 ---
 
@@ -152,7 +187,7 @@ python scripts/aoflagger_wrapper.py path/to/mask.npy --out data/labels/
 
 ## References
 
-Key literature cited in the research proposal (full APA list in `docs/Research_Proposal.docx`):
+Key literature cited in the research proposal (full APA list in `doc/ada_kibet_research_proposal-2.pdf`; full reference list for the paper itself in `doc/PAPER_ARXIV.md`):
 
 - Offringa et al. (2010, 2015, 2023) — AOFlagger methodology and operational evaluations  
 - Akeret et al. (2017) — CNN/U-Net for RFI segmentation  

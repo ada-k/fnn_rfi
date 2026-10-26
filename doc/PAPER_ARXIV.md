@@ -59,7 +59,7 @@ We address this efficiency gap with the **Fractal Neural Network (FNN)**. FNNSeg
 
 FNNSeg follows a U-Net-style encoder–decoder with $D=3$ downsampling stages, a bottleneck, and 3 corresponding upsampling stages with skip connections, closing with a 1×1 output convolution that produces a single-channel per-pixel RFI logit. At every resolution level, the standard double-convolution block is replaced by a **FractalBlock** (Figure 1).
 
-![FNNSeg architecture](figs/thesis/fig19_fnnseg_arch.png)
+![FNNSeg architecture](../figs/thesis/fig19_fnnseg_arch.png)
 
 **Figure 1.** FNNSeg architecture: a Fibonacci-scheduled U-Net built from recursive FractalBlocks, with the encoder/decoder channel widths and per-stage FractalBlock depth shown at bottom (218,609 parameters for 2-channel HERA input; 218,465 for 1-channel LOFAR input).
 
@@ -67,7 +67,7 @@ FNNSeg follows a U-Net-style encoder–decoder with $D=3$ downsampling stages, a
 
 A FractalBlock of recursion depth $d$ contains two parallel branches: a shallow ConvBlock (two 3×3 convolutions, each followed by BatchNorm and SiLU), and a recursive branch consisting of two child FractalBlocks of depth $d-1$ run in parallel. At the base case ($d=1$), the block reduces to a single ConvBlock. Branch outputs are concatenated and merged with a learned 1×1 convolution at every level of the recursion. At $d=3$ (used for every encoder, bottleneck, and decoder stage in this work), the block contains four parallel leaf ConvBlocks whose outputs are progressively merged across two levels, giving effective receptive-field depths of 2, 4, and 8 convolutional layers within a single block (Figure 2): an implicit multi-scale representation without explicit attention or multi-branch design.
 
-![FractalBlock recursion tree at depth 3](figs/thesis/fig20_fractal_block.png)
+![FractalBlock recursion tree at depth 3](../figs/thesis/fig20_fractal_block.png)
 
 **Figure 2.** FractalBlock recursion tree at depth $d=3$: each non-leaf node spawns two parallel paths (a shallow ConvBlock and a deeper recursive FractalBlock), concatenated and projected through a learned 1×1 convolution at every merge level. Drop-path (disabled, rate 0.0, in the reported experiments) would stochastically zero individual branches at training time.
 
@@ -101,7 +101,7 @@ Wall-clock training time for the full 30-epoch budget (before early stopping cou
 
 Per the project's compute-planning record (Figure 3), the CPU-trained runs used a MacBook Air (Apple M4), while the CUDA-trained runs used Google Cloud Platform `n1-standard-8` instances (HERA-PP, HERA-AOF, and one LOFAR configuration) and `n1-highmem-8` instances (the remaining LOFAR configuration), each attached to a single NVIDIA Tesla T4 GPU; total estimated GCP compute cost across all 24 GPU runs was approximately $55. We report this as the best available record of hardware provenance rather than a directly logged runtime fact, since the per-run training logs record only `Device: cuda`/`Device: cpu`, not the specific instance or GPU model.
 
-![Computational infrastructure: training time and GCP cost estimates](figs/thesis/fig18_compute_overview.png)
+![Computational infrastructure: training time and GCP cost estimates](../figs/thesis/fig18_compute_overview.png)
 
 **Figure 3.** Computational infrastructure. Left: estimated wall-clock time per run by dataset and hardware. Right: estimated Google Cloud Platform compute cost by dataset and instance type (on-demand pricing, `us-central1`).
 
@@ -147,7 +147,7 @@ We use a full $3\times3\times3$ factorial design: 3 models (FNNSeg, U-Net, ResU-
 
 FNNSeg attains the highest F1 with the fewest parameters, beating U-Net on every individual seed and ResU-Net on all six seed comparisons. Against the published du Toit et al. (2023) benchmarks, FNNSeg's mean F1 (0.9952; best single seed 0.9964) exceeds RFI_NET (805K params, F1 = 0.9936), RNET (32K params, F1 = 0.9895), UNET (291K, 0.9869), ASPP_UNET (291K, 0.9863), DSC_DUAL_RESUNET (370K, 0.9859), DSC_MONO_RESUNET (185K, 0.9826) and RNET5 (19.8K, 0.9851): the only architecture in this comparison combining F1 ≥ 0.995 with ≤ 300K parameters (Figure 4).
 
-![F1 comparison against du Toit et al. (2023) baselines](figs/thesis/fig8_comparison_dutoit.png)
+![F1 comparison against du Toit et al. (2023) baselines](../figs/thesis/fig8_comparison_dutoit.png)
 
 **Figure 4.** Test F1 on HERA-PP: our three architectures (mean ± std, coloured bars) against all eight architectures benchmarked by du Toit et al. (2023) on the same data (grey bars, best reported run).
 
@@ -173,7 +173,7 @@ FNNSeg leads on the hardest, most realistic benchmark, with markedly lower cross
 
 Across all three datasets, FNNSeg's relative F1 advantage over ResU-Net grows with task difficulty (HERA-PP: +0.002; HERA-AOF: U-Net leads by 0.004; LOFAR: +0.016), and its seed-to-seed variance is the lowest of the three architectures on the two hardest datasets, a practically relevant reliability property for deployment. Figure 5 shows the resulting parameter-efficiency Pareto frontier against all eight du Toit et al. (2023) baselines. Full per-seed tables and dataset split sizes are provided in Appendix A; additional supplementary figures (per-dataset learning curves, radar and summary-table views) are provided in Appendix B.
 
-![Parameter-efficiency Pareto plot](figs/thesis/fig7_pareto_efficiency.png)
+![Parameter-efficiency Pareto plot](../figs/thesis/fig7_pareto_efficiency.png)
 
 **Figure 5.** Parameter efficiency on HERA-PP: test F1 vs. parameter count (log scale) for our three architectures (circles) against all eight du Toit et al. (2023) baselines (triangles). FNNSeg attains the best F1 of any architecture below 700K parameters.
 
@@ -183,17 +183,17 @@ Across all three datasets, FNNSeg's relative F1 advantage over ResU-Net grows wi
 
 **Why fractal blocks outperform standard convolutions despite fewer parameters.** We attribute the advantage to three properties, not to capacity: (i) *implicit ensembling*: the two parallel branches per FractalBlock, merged by a learned 1×1 projection, behave like an adaptive, spatially-varying ensemble of shallow and deep feature extractors; (ii) *implicit multi-scale aggregation*: the recursive depth exposes effective receptive fields of 2, 4, and 8 layers within a single block, matching RFI's simultaneous narrowband/broadband/complex morphology without explicit attention; (iii) *Fibonacci channels as an information bottleneck*: sub-geometric channel growth keeps intermediate feature maps compact, encouraging compact, generalisable representations rather than memorisation, which likely explains why the largest FNNSeg advantage appears on the hardest, most overfitting-prone dataset (LOFAR). Figure 6 summarises mean test F1 for all nine (model, dataset) combinations in a single view, and Figure 7 shows the underlying per-seed distributions, confirming FNNSeg's tighter spread on HERA-PP and LOFAR visually.
 
-![Cross-dataset performance heatmap](figs/thesis/fig9_cross_dataset_heatmap.png)
+![Cross-dataset performance heatmap](../figs/thesis/fig9_cross_dataset_heatmap.png)
 
 **Figure 6.** Mean test F1 for all three architectures across all three datasets (n = 3 seeds each).
 
-![Seed variance box plots](figs/thesis/fig10_seed_variance.png)
+![Seed variance box plots](../figs/thesis/fig10_seed_variance.png)
 
 **Figure 7.** Distribution of test F1 across the three random seeds, per architecture and dataset. FNNSeg's interquartile range is visibly narrower than ResU-Net's on HERA-PP and LOFAR.
 
 **Label quality is a first-order effect.** The gap between HERA-PP (F1 ≈ 0.99) and HERA-AOF (F1 ≈ 0.77) is far larger than any architecture effect observed in this study, underscoring that for practical deployment, investment in label quality (or noise-robust training, e.g. simulation pretraining followed by fine-tuning on heuristic labels) may yield larger returns than further architecture search (Figure 8).
 
-![Effect of label type and instrument on performance](figs/thesis/fig14_dataset_difficulty.png)
+![Effect of label type and instrument on performance](../figs/thesis/fig14_dataset_difficulty.png)
 
 **Figure 8.** Mean test F1 by architecture and dataset, highlighting the label-quality gap (HERA-PP vs. HERA-AOF, same underlying observations) and the instrument/difficulty gap (HERA vs. LOFAR).
 
@@ -333,43 +333,43 @@ All 27 individual training runs (3 models × 3 datasets × 3 seeds) underlying T
 Figures 1–8 (architecture, FractalBlock, compute, and the primary results/discussion comparisons) appear inline in Sections 3, 6, and 7. The figures below are additional supplementary views generated from the same 27 runs, available in `fnn_rfi/figs/thesis/` and `fnn_rfi/figs/`, reproduced here rather than merely listed so they are not placeholders.
 
 **Figure B1.** Test F1 by architecture across all three datasets (bar-chart view of Tables 2–4).
-![F1 by model across datasets](figs/thesis/fig1_f1_bars.png)
+![F1 by model across datasets](../figs/thesis/fig1_f1_bars.png)
 
 **Figure B2.** Test AUC-ROC by architecture across all three datasets.
-![AUC-ROC by model across datasets](figs/thesis/fig2_auc_bars.png)
+![AUC-ROC by model across datasets](../figs/thesis/fig2_auc_bars.png)
 
 **Figure B3.** Test pixel accuracy by architecture across all three datasets.
-![Accuracy by model across datasets](figs/thesis/fig3_acc_bars.png)
+![Accuracy by model across datasets](../figs/thesis/fig3_acc_bars.png)
 
 **Figure B4.** Training/validation learning curves, HERA-PP, all three architectures.
-![Learning curves, HERA-PP](figs/thesis/fig4_learning_curves_hera.png)
+![Learning curves, HERA-PP](../figs/thesis/fig4_learning_curves_hera.png)
 
 **Figure B5.** Training/validation learning curves, HERA-AOF, all three architectures.
-![Learning curves, HERA-AOF](figs/thesis/fig5_learning_curves_aof.png)
+![Learning curves, HERA-AOF](../figs/thesis/fig5_learning_curves_aof.png)
 
 **Figure B6.** Training/validation learning curves, LOFAR, all three architectures.
-![Learning curves, LOFAR](figs/thesis/fig6_learning_curves_lofar.png)
+![Learning curves, LOFAR](../figs/thesis/fig6_learning_curves_lofar.png)
 
 **Figure B7.** Parameter efficiency (test F1 vs. parameter count, log scale) across all three datasets and three architectures in a single view.
-![Parameter efficiency across all datasets](figs/thesis/fig17_arch_comparison.png)
+![Parameter efficiency across all datasets](../figs/thesis/fig17_arch_comparison.png)
 
 **Figure B8.** Multi-metric radar comparison (accuracy, F1, AUC-ROC) of the three architectures.
-![Multi-metric radar comparison](figs/thesis/fig11_radar.png)
+![Multi-metric radar comparison](../figs/thesis/fig11_radar.png)
 
 **Figure B9.** Convergence overview (validation F1 vs. epoch) across architectures and datasets.
-![Convergence overview](figs/thesis/fig12_convergence.png)
+![Convergence overview](../figs/thesis/fig12_convergence.png)
 
 **Figure B10.** Training/validation loss curves for all individual seeds.
-![Loss curves, all seeds](figs/thesis/fig13_loss_all_seeds.png)
+![Loss curves, all seeds](../figs/thesis/fig13_loss_all_seeds.png)
 
 **Figure B11.** Visual summary table of all 27 runs (mean ± std by architecture and dataset).
-![Summary table](figs/thesis/fig15_summary_table.png)
+![Summary table](../figs/thesis/fig15_summary_table.png)
 
 **Figure B12.** Best-epoch statistics (epoch at which early stopping selected the checkpoint) across runs.
-![Best-epoch statistics](figs/thesis/fig16_best_epoch.png)
+![Best-epoch statistics](../figs/thesis/fig16_best_epoch.png)
 
 **Figure B13.** Qualitative segmentation predictions on the HERA-PP test set (input, ground truth, and predicted mask).
-![Qualitative segmentation predictions](figs/seg_predictions.png)
+![Qualitative segmentation predictions](../figs/seg_predictions.png)
 
 ---
 
@@ -377,7 +377,7 @@ Figures 1–8 (architecture, FractalBlock, compute, and the primary results/disc
 
 Before committing to the compute-intensive real-telescope experiments (Sections 5–6), we validated FNNSeg's architecture choices and explored two additional task formulations on a synthetic, on-the-fly RFI-injection pipeline (`data/synthetic_spectrogram.py`, `data/inject_rfi.py`): single-channel spectrograms with injected contamination drawn from five morphology types (narrowband, time-burst, broadband, diagonal, rectangle; Figure C1), generated deterministically from a seed so that every run is exactly reproducible. All experiments in this appendix use 3 seeds (123, 42, 7), a different seed set from the real-data experiments (0, 1, 2) in Sections 5–6, since this synthetic study was conducted independently and earlier; we flag this explicitly rather than imply a single unified seed protocol.
 
-![Example synthetic spectrograms with injected RFI](figs/spectrogram_samples.png)
+![Example synthetic spectrograms with injected RFI](../figs/spectrogram_samples.png)
 
 **Figure C1.** Example synthetic spectrograms for each of the five injected RFI morphology types used in this appendix (narrowband, time-burst, broadband, diagonal, rectangle), alongside their ground-truth binary masks.
 
@@ -396,7 +396,7 @@ We swept four architecture factors (Fibonacci vs. standard channels, standard vs
 
 *Non-fractal, standard convs ran with 2 seeds only (123, 7); all other rows use 3.*
 
-![Fibonacci vs. separable ablation](figs/ablation_fib_vs_sep.png)
+![Fibonacci vs. separable ablation](../figs/ablation_fib_vs_sep.png)
 
 **Figure C2.** IoU/F1 by Fibonacci/separable configuration, synthetic segmentation task.
 
@@ -410,7 +410,7 @@ We swept four architecture factors (Fibonacci vs. standard channels, standard vs
 | 3 | 8 | 66,201 | 0.9646 ± 0.0044 | 0.9818 ± 0.0023 |
 | 3 | 32 | 869,057 | 0.9721 ± 0.0077 | 0.9858 ± 0.0041 |
 
-![Stage count and base channel width ablation](figs/ablation_ch_vs_stages.png)
+![Stage count and base channel width ablation](../figs/ablation_ch_vs_stages.png)
 
 **Figure C3.** IoU/F1 as a function of encoder stage count and base channel width. Stages = 3, base channels = 16 is the best-performing configuration tested, despite not being the largest.
 
@@ -423,7 +423,7 @@ We swept four architecture factors (Fibonacci vs. standard channels, standard vs
 | 0.1 | 0.9484 ± 0.0011 | 0.9733 ± 0.0006 |
 | 0.2 | 0.9261 ± 0.0039 | 0.9612 ± 0.0021 |
 
-![Drop-path ablation across stages](figs/ablation_dp_vs_stages.png)
+![Drop-path ablation across stages](../figs/ablation_dp_vs_stages.png)
 
 **Figure C4.** IoU/F1 vs. drop-path rate. Performance degrades monotonically with drop-path rate at this training budget, motivating `drop_path_rate = 0` in Sections 3–6.
 
@@ -445,7 +445,7 @@ As a secondary task, we trained classifiers to predict which of the five morphol
 | RNN (LSTM) | 145,802 | 0.279 ± 0.033 |
 | ResNet-cls | 874,458 | 0.323 ± 0.033 |
 
-![Classification accuracy by model](figs/cls_acc_by_model.png)
+![Classification accuracy by model](../figs/cls_acc_by_model.png)
 
 **Figure C5.** Validation accuracy by architecture on the 5-way morphology classification task.
 
@@ -464,15 +464,15 @@ We additionally trained FNNInpaint, a dual-head variant of FNNSeg that predicts 
 | fib=T, sep=F, dp=0.0, ch=16 | 326,930 | 0.9622 ± 0.0035 | 0.77 ± 1.57 | 0.155 ± 0.110 |
 | fib=T, sep=F, dp=0.0, ch=32 | 1,301,410 | **0.9641 ± 0.0084** | 2.63 ± 2.94 | 0.285 ± 0.135 |
 
-![Inpainting mask IoU by configuration](figs/inpaint_iou_bars.png)
+![Inpainting mask IoU by configuration](../figs/inpaint_iou_bars.png)
 
 **Figure C6.** Mask IoU by FNNInpaint configuration.
 
-![Inpainting PSNR by configuration](figs/inpaint_psnr_bars.png)
+![Inpainting PSNR by configuration](../figs/inpaint_psnr_bars.png)
 
 **Figure C7.** Reconstruction PSNR by FNNInpaint configuration, with large cross-seed variance.
 
-![Qualitative inpainting predictions](figs/inpaint_predictions.png)
+![Qualitative inpainting predictions](../figs/inpaint_predictions.png)
 
 **Figure C8.** Qualitative FNNInpaint predictions: contaminated input, predicted mask, and reconstructed spectrogram against ground truth.
 
@@ -482,7 +482,7 @@ Mask localisation is consistently strong (IoU 0.95–0.96, comparable to the seg
 
 Using the selected FNNSeg configuration, we swept injected-RFI signal-to-noise ratio (SNR) from 0.5 to 20 on the synthetic segmentation task (single seed).
 
-![IoU vs. injected RFI SNR](figs/snr_sweep.png)
+![IoU vs. injected RFI SNR](../figs/snr_sweep.png)
 
 **Figure C9.** Segmentation IoU as a function of injected RFI SNR.
 
