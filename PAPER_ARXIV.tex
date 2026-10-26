@@ -1,0 +1,594 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{authblk}
+\usepackage{natbib}
+\usepackage{xcolor}
+
+\hypersetup{colorlinks=true, linkcolor=blue, citecolor=blue, urlcolor=blue}
+
+\title{Fractal Neural Networks with Fibonacci Channel Scheduling for Radio Frequency Interference Detection}
+
+\author[1]{Ada Kibet}
+\affil[1]{University of East London, u2647143@uel.ac.uk, adakibet@gmail.com, ORCID: \href{https://orcid.org/0009-0002-0809-8738}{0009-0002-0809-8738}}
+
+\date{}
+
+\begin{document}
+\maketitle
+
+\noindent \textbf{Code and trained checkpoints:} \url{https://github.com/ada-k/fnn_rfi} (Apache-2.0); repository will be made public prior to submission.
+
+\begin{abstract}
+Radio frequency interference (RFI) contaminates radio-telescope observations at all frequencies, degrading data quality and potentially masking astrophysical signals. As next-generation instruments such as the Square Kilometre Array (SKA) come online, the volume and complexity of RFI make traditional rule-based mitigation insufficient, while the standard deep-learning alternative, channel-doubling encoder-decoder networks, grows expensive to run in real time. We propose the Fractal Neural Network (FNN), a segmentation architecture (FNNSeg) that replaces channel-doubling with Fibonacci-sequence channel scheduling and replaces standard convolutional blocks with self-similar recursive fractal blocks. We benchmark FNNSeg against U-Net and Residual U-Net on three publicly available real-telescope datasets (HERA with pixel-perfect simulation labels [HERA-PP], HERA with AOFlagger-generated labels [HERA-AOF], and LOFAR with expert-annotated real observations), replicating every experiment across three random seeds. On HERA-PP, FNNSeg attains a mean test F1 of $0.9952 \pm 0.0008$ with 218,609 parameters, exceeding U-Net (482,593 params, F1 = 0.9944), ResU-Net (1,614,977 params, F1 = 0.9929), and the best published result on this benchmark, RFI\_NET \citep{dutoit2023} (805,473 params, F1 = 0.9936). On LOFAR, the hardest and most realistic setting, FNNSeg again leads both baselines (F1 = $0.6337 \pm 0.0006$ vs. 0.6281 and 0.6174) with the lowest cross-seed variance of the three architectures. These results show that fractal architectures with Fibonacci channel scheduling deliver state-of-the-art RFI segmentation accuracy with 2.2--7.4$\times$ fewer parameters than competitive baselines, a property directly relevant to real-time deployment on edge hardware at the correlator output of next-generation radio telescopes.
+\end{abstract}
+
+\noindent \textbf{Keywords:} radio frequency interference, RFI mitigation, radio astronomy, deep learning, semantic segmentation, U-Net, fractal networks, HERA, LOFAR
+
+\section{Introduction}
+
+Radio astronomy depends on detecting extraordinarily faint signals that have travelled across cosmological distances. Terrestrial and satellite technologies, including mobile networks, aircraft transponders, satellite communications, and digital broadcast, emit at the same frequencies used by natural astrophysical sources, and this radio frequency interference (RFI) can be orders of magnitude stronger than the signal of interest. Left uncorrected, RFI can render observations scientifically unusable \citep{baan2004}.
+
+Two broad mitigation strategies exist. Classical flaggers such as AOFlagger \citep{offringa2012} use statistical and morphological heuristics to identify contaminated time--frequency pixels; they are fast and mature but require manual re-tuning for every telescope and degrade as the RFI environment becomes more complex \citep{offringa2010}. Supervised deep learning instead learns a detector directly from labelled data, and has been shown to outperform classical flaggers on real observations without hand-engineered features \citep{vafaeisadr2020,gu2024}. The dominant deep architectures in this space are U-Net-style encoder-decoders \citep{ronneberger2015,dutoit2023}, which double the channel width at every downsampling stage. This channel-doubling schedule grows parameter count quickly and is a poor fit for the strict compute and latency budgets of real-time telescope pipelines, a constraint that will only tighten as the SKA begins producing data faster than existing flagging infrastructure can process \citep{sclocco2020}.
+
+We address this efficiency gap with the \textbf{Fractal Neural Network (FNN)}. FNNSeg, the segmentation variant, keeps the U-Net encoder--decoder scaffold but (i) replaces the double-convolution block with a \textbf{FractalBlock}, a self-similar recursive module in which two parallel sub-branches of differing effective depth are merged through a learned $1\times1$ projection, and (ii) replaces channel-doubling with a \textbf{Fibonacci-sequence channel schedule}, whose growth ratio converges to the golden ratio $\varphi \approx 1.618$ rather than 2. We hypothesise that this combination of implicit multi-path ensembling and sub-geometric channel growth better matches the multi-scale, self-similar morphology of RFI than fixed-depth convolutional blocks, while substantially reducing parameter count.
+
+\subsection{Research questions}
+\begin{enumerate}
+\item Can a Fractal Neural Network with Fibonacci channel scheduling match or exceed established deep-learning baselines for RFI segmentation on real telescope data?
+\item Does its parameter-efficiency advantage hold across datasets with different label quality and telescope configurations?
+\item How does label quality (pixel-perfect simulation labels, AOFlagger heuristic labels, and real expert-annotated labels) affect each architecture, and does FNNSeg degrade more gracefully than larger baselines under noisier supervision?
+\end{enumerate}
+
+\subsection{Contributions}
+\begin{itemize}
+\item We introduce FNNSeg, a U-Net-scaffolded segmentation network built from recursive FractalBlocks and Fibonacci channel scheduling, with optional drop-path regularisation.
+\item We evaluate FNNSeg against U-Net and ResU-Net on three real-telescope RFI benchmarks (HERA-PP, HERA-AOF, LOFAR), each replicated over three seeds (27 runs total), reporting mean $\pm$ standard deviation for F1, pixel accuracy, and AUC-ROC.
+\item FNNSeg exceeds the best published result on HERA-PP \citep{dutoit2023} while using 3.7$\times$ fewer parameters than the top-performing published model, and leads both in-house baselines on every dataset, with the largest relative advantage on the hardest, most realistic dataset (LOFAR).
+\item We quantify the effect of label quality on performance and show that the well-known AOFlagger performance ceiling (F1 $\approx$ 0.77 vs. $\approx$ 0.99 on simulation labels) is a property of label noise rather than model capacity.
+\item We release training code, configurations, and per-seed logs for full reproducibility.
+\end{itemize}
+
+\section{Related Work}
+
+\textbf{RFI mitigation.} Post-correlation flagging is the dominant operational approach to RFI mitigation. AOFlagger \citep{offringa2012} combines Gaussian bandpass estimation with the SumThreshold morphological algorithm and is deployed operationally on LOFAR, WSRT, HERA and MeerKAT; its accuracy is sensitive to manually tuned thresholds and degrades in high-RFI environments \citep{offringa2010,baan2004}. Early machine-learning approaches used hand-engineered features (e.g. random-forest classifiers on statistical descriptors) for RFI detection \citep{mosiane2016}, improving recall over fixed-threshold flaggers but generalising poorly to unfamiliar interference. \citet{vafaeisadr2020} reframed RFI detection as end-to-end supervised pixel classification on 2D time--frequency images, a template followed by subsequent CNN-based work, including this paper.
+
+\textbf{Encoder--decoder segmentation.} U-Net \citep{ronneberger2015} and its residual extension \citep{he2016} are the standard architectures for pixel-level RFI segmentation. \citet{dutoit2023} provide the most systematic public comparison to date, benchmarking eight architectures on the same HERA and LOFAR data used here; their best model, RFI\_NET (805K parameters), reaches F1 = 0.9936 on HERA-PP, while a much smaller decoder-only model, RNET (32K parameters), reaches F1 = 0.9895, demonstrating that large capacity is not strictly necessary for this task, but leaving open whether a principled, non-doubling channel schedule could close the remaining gap at low parameter cost. That is the gap FNNSeg targets. \citet{gu2024} add explicit attention and multi-scale branches to a U-Net for RFI detection; \citet{zhang2024} propose RFI-DRUnet, which jointly flags and reconstructs contaminated spectra. FNNSeg does not use explicit attention but achieves a related effect implicitly: the parallel paths within each FractalBlock process features at different effective depths (2, 4, 8 convolutional layers), providing built-in multi-scale aggregation without extra attention modules.
+
+\textbf{Fractal architectures.} FractalNet \citep{larsson2017} showed that ultra-deep networks built from a recursive fractal expansion rule, regularised with drop-path (branch-level stochastic depth), can match residual networks without explicit skip connections, because the resulting parallel paths of different depth act as an implicit ensemble. We adapt this block design for dense segmentation by embedding it in a U-Net scaffold, and combine it with a Fibonacci channel schedule, an aspect not explored in the original FractalNet, motivated by the golden-ratio growth rate observed in many self-similar natural structures.
+
+\textbf{Why not transformers?} Vision Transformers \citep{dosovitskiy2020} and segmentation variants such as SegFormer \citep{xie2021} require large pretraining corpora to generalise; HERA and LOFAR provide only 1,120 and 7,465 training frames respectively, one to two orders of magnitude below typical ViT pretraining scale. Pixel-level self-attention over a $512\times512$ frame also has a 262,144-token sequence length, intractable without aggressive windowing that discards the global receptive field transformers are meant to provide. Fully convolutional architectures retain the locality and translation-equivariance priors that match RFI's localised time--frequency structure, at a small fraction of the parameter budget (218K vs. 86M+ for a standard ViT backbone), a decisive advantage for edge deployment.
+
+\textbf{Evaluation framework.} \citet{liang2023} show that the choice of RFI detection method measurably affects downstream science (HI galaxy detection rates), motivating evaluation on real telescope data rather than synthetic data alone. \citet{sclocco2020} show that for real-time transient-detection pipelines such as Apertif, computational efficiency is as much a hard constraint as detection accuracy, directly motivating FNNSeg's parameter-efficiency focus.
+
+\section{Method}
+
+\subsection{FNNSeg architecture}
+
+FNNSeg follows a U-Net-style encoder--decoder with $D=3$ downsampling stages, a bottleneck, and 3 corresponding upsampling stages with skip connections, closing with a $1\times1$ output convolution that produces a single-channel per-pixel RFI logit. At every resolution level, the standard double-convolution block is replaced by a \textbf{FractalBlock} (Figure~\ref{fig:arch}).
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.85\linewidth]{figs/thesis/fig19_fnnseg_arch.png}
+\caption{FNNSeg architecture: a Fibonacci-scheduled U-Net built from recursive FractalBlocks, with the encoder/decoder channel widths and per-stage FractalBlock depth shown at bottom (218,609 parameters for 2-channel HERA input; 218,465 for 1-channel LOFAR input).}
+\label{fig:arch}
+\end{figure}
+
+\subsection{The FractalBlock}
+
+A FractalBlock of recursion depth $d$ contains two parallel branches: a shallow ConvBlock (two $3\times3$ convolutions, each followed by BatchNorm and SiLU), and a recursive branch consisting of two child FractalBlocks of depth $d-1$ run in parallel. At the base case ($d=1$), the block reduces to a single ConvBlock. Branch outputs are concatenated and merged with a learned $1\times1$ convolution at every level of the recursion. At $d=3$ (used for every encoder, bottleneck, and decoder stage in this work), the block contains four parallel leaf ConvBlocks whose outputs are progressively merged across two levels, giving effective receptive-field depths of 2, 4, and 8 convolutional layers within a single block (Figure~\ref{fig:fractalblock}): an implicit multi-scale representation without explicit attention or multi-branch design.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.85\linewidth]{figs/thesis/fig20_fractal_block.png}
+\caption{FractalBlock recursion tree at depth $d=3$: each non-leaf node spawns two parallel paths (a shallow ConvBlock and a deeper recursive FractalBlock), concatenated and projected through a learned $1\times1$ convolution at every merge level.}
+\label{fig:fractalblock}
+\end{figure}
+
+\subsection{Fibonacci channel scheduling}
+
+Standard U-Net doubles channel width at each stage (e.g. [16, 32, 64] for base\_ch = 16). FNNSeg instead uses multipliers taken from the Fibonacci sequence (1, 1, 2, 3, 5, \dots) at positions 2--4, giving multipliers [1, 2, 3] and encoder widths [16, 32, 48]; the bottleneck uses $2\times 48 = 96$ channels. Because consecutive Fibonacci numbers converge to the ratio $\varphi \approx 1.618$, this schedule grows sub-geometrically (between linear and doubling), reducing the final encoder stage's parameter count by roughly 56\% relative to standard doubling while preserving representational capacity via the fractal block's multi-path structure. The complete FNNSeg model has 218,609 parameters for 2-channel (HERA) input, versus 482,593 for U-Net and 1,614,977 for ResU-Net built with the same base width and depth: a 2.2$\times$ and 7.4$\times$ reduction respectively.
+
+\subsection{Regularisation, loss, and optimisation}
+
+FNNSeg optionally supports drop-path (branch-level stochastic depth; \citealp{larsson2017}), disabled (\texttt{drop\_path\_rate = 0}) in the reported experiments after preliminary sweeps found no benefit at this training budget, but retained in the architecture (rates up to 0.2 are supported); see Appendix C.1 for the full synthetic-data ablation that motivated this and the other architecture hyperparameters (stage count, base channel width, Fibonacci vs. separable convolutions) used throughout Sections 3--6. All models are trained with \texttt{DiceBCELoss}, an equal-weighted combination of Dice loss and binary cross-entropy,
+\begin{equation}
+\mathrm{DiceBCE}(y,p) = 0.5\cdot \mathrm{BCE}(y,p) + 0.5\cdot \mathrm{DiceLoss}(y,p),
+\end{equation}
+which directly optimises F1 while retaining well-calibrated pointwise probabilities, a combination shown to outperform either loss alone on class-imbalanced segmentation \citep{milletari2016}; this is relevant here since RFI typically occupies only 1--10\% of pixels. All models use Adam \citep{kingma2014} ($\mathrm{lr}=10^{-3}$, $\beta_1=0.9$, $\beta_2=0.999$, no weight decay) with cosine-annealed learning rate decaying to 0, early stopping (patience 7 on validation F1), and identical hyperparameters across architectures and datasets to isolate the effect of architecture choice.
+
+\subsection{Baselines}
+
+\textbf{U-Net} \citep{ronneberger2015}: double-convolution blocks, max-pool downsampling, transposed-convolution upsampling, channel schedule [16, 32, 64]. This is the closest architectural analogue to FNNSeg, differing only in block type and channel schedule. \textbf{Residual U-Net}: identical scaffold with pre-activation residual blocks \citep{he2016}, included as a higher-capacity, higher-cost alternative.
+
+\subsection{Data pipeline}
+
+Frames ($512\times512$, log-amplitude transformed and z-score normalised using training-split statistics only) are split into $256\times256$ patches with 128-pixel (50\%) stride, yielding 9 patches per frame, extracted on-the-fly during training to bound memory use.
+
+\subsection{Implementation, hardware, and compute}
+
+All models are implemented in PyTorch (\texttt{torch>=1.8.0}, \texttt{torchvision>=0.9.0}; full dependency list in \texttt{requirements.txt}). The training script (\texttt{scripts/train\_hera.py}) selects the fastest available backend automatically via a single \texttt{get\_device()} utility: CUDA GPU, then Apple Metal Performance Shaders (MPS, only on Python $\geq$ 3.11), then CPU, and logs the selected device for every run.
+
+Verified directly from the per-run training logs (\texttt{logs/hera/} and \texttt{fnn\_rfi/logs/hera/}): 3 of the 27 runs, HERA-PP seed 0 for all three architectures (FNNSeg, U-Net, ResU-Net), were trained on CPU with batch size 8. The CPU sweep proved too slow to complete a full 3-seed run in a reasonable time, so the remaining 24 runs, HERA-PP seeds 1 and 2 (6 runs) plus all 9 HERA-AOF runs and all 9 LOFAR runs, were trained on a CUDA GPU with batch size 32. Every other hyperparameter (learning rate, scheduler, epoch budget, patience, patch size and stride, and architecture configuration) is identical across all 27 runs. This means batch size is not fully constant even within the HERA-PP seed sweep (seed 0 vs.\ seeds 1--2); reassuringly, seed 0's per-model metrics are not outliers relative to seeds 1--2 (Appendix Table A1), suggesting the effect on the reported mean $\pm$ std is small, but it could not be fully disentangled from true seed variability, and we flag it explicitly in Section 7 (Limitations). Exact PyTorch/Python patch versions and a full environment lockfile are not currently pinned in the repository; we recommend adding one (e.g. \texttt{pip freeze > requirements-lock.txt}) before archival release.
+
+Wall-clock training time for the full 30-epoch budget (before early stopping could trigger): the three CPU-trained HERA-PP seed-0 runs took approximately 2--5 days each ($\sim$40--90 minutes per epoch, reflecting a shared personal machine rather than a dedicated compute cluster, with occasional multi-hour gaps between epochs consistent with the machine sleeping); the GPU-trained HERA-PP seed-1/seed-2 reruns took approximately 2--2.5 hours each ($\sim$5 minutes/epoch), closely matching the GPU-trained HERA-AOF runs (2.5--3 hours, $\sim$5.5 minutes/epoch) and LOFAR runs ($\sim$8 hours, $\sim$16--17 minutes/epoch, reflecting its larger patch count).
+
+Per the project's compute-planning record (Figure~\ref{fig:compute}), the CPU-trained runs used a MacBook Air (Apple M4), while the CUDA-trained runs used Google Cloud Platform \texttt{n1-standard-8} instances (HERA-PP, HERA-AOF, and one LOFAR configuration) and \texttt{n1-highmem-8} instances (the remaining LOFAR configuration), each attached to a single NVIDIA Tesla T4 GPU; total estimated GCP compute cost across all 24 GPU runs was approximately \$55. We report this as the best available record of hardware provenance rather than a directly logged runtime fact, since the per-run training logs record only \texttt{Device: cuda}/\texttt{Device: cpu}, not the specific instance or GPU model.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.95\linewidth]{figs/thesis/fig18_compute_overview.png}
+\caption{Computational infrastructure. Left: estimated wall-clock time per run by dataset and hardware. Right: estimated Google Cloud Platform compute cost by dataset and instance type (on-demand pricing, \texttt{us-central1}).}
+\label{fig:compute}
+\end{figure}
+
+\section{Data}
+
+\subsection{Datasets and rationale}
+
+We evaluate on three benchmarks released by \citet{dutoit2023} via Zenodo (DOI: 10.5281/zenodo.8275061): \textbf{HERA-PP} (HERA telescope, pixel-perfect simulation labels), \textbf{HERA-AOF} (same HERA observations, AOFlagger-derived labels), and \textbf{LOFAR} (real LOFAR observations with expert manual labels; derived from \citealp{mesarcik2022}).
+
+This choice of datasets is deliberate rather than incidental, for three reasons. First, using a single published, versioned benchmark with fixed train/test splits and a documented preprocessing protocol removes confounds that otherwise plague cross-paper comparisons: any F1 difference between this work and \citet{dutoit2023} is attributable to architecture, not to differing data splits, patch strategies, or normalisation. Raw archives at NRAO (HERA) and ASTRON (LOFAR) exist but require institutional access and do not ship the benchmark label masks used for training and evaluation, making the curated Zenodo release the only practical route to a like-for-like comparison. Second, HERA-PP and HERA-AOF share identical underlying observations but differ \emph{only} in label source, which lets us isolate the effect of label quality on model behaviour independently of instrument or architecture: a controlled comparison that would be impossible with two different telescopes. Third, LOFAR is a structurally different telescope (different frequency range, array geometry, and RFI environment, with single-channel amplitude-only data) with real, expert-annotated interference; including it tests cross-instrument generalisation and avoids over-claiming from simulation-only results, directly addressing calls in the literature for evaluation on real rather than purely synthetic data \citep{liang2023}. Together, the three datasets span the full quality spectrum a practitioner encounters in practice (perfect ground truth, heuristic labels, and real expert annotation), which is the axis of variation most relevant to RQ3.
+
+\begin{table}[h]
+\centering
+\caption{Dataset summary.}
+\begin{tabular}{lllrrrr}
+\toprule
+Dataset & Telescope & Label type & Train & Test & Frame size & Channels \\
+\midrule
+HERA-PP & HERA & Pixel-perfect (simulation) & 1,120 & 280 & $512\times512$ & 2 (amp+phase) \\
+HERA-AOF & HERA & AOFlagger heuristic & 1,120 & 280 & $512\times512$ & 2 (amp+phase) \\
+LOFAR & LOFAR & Expert manual & 7,465 & 109 & $512\times512$ & 1 (amplitude) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+HERA \citep{deboer2017} is a low-frequency array in the Karoo desert, South Africa; HERA-PP labels come from \texttt{hera\_sim}-injected RFI with exact ground truth, while HERA-AOF labels come from AOFlagger applied to the same observations, and are known to systematically under-flag weak/diffuse RFI and over-flag bright astrophysical foregrounds. LOFAR \citep{vanhaarlem2013} operates at 10--240 MHz across a European baseline and provides the largest, most realistic, and most challenging benchmark (real aviation, GSM, and broadcast interference), at the cost of a small held-out test set (109 frames), which we flag as a source of test-metric noise (Section 6).
+
+\section{Experiments}
+
+\subsection{Design}
+
+We use a full $3\times3\times3$ factorial design: 3 models (FNNSeg, U-Net, ResU-Net) $\times$ 3 datasets (HERA-PP, HERA-AOF, LOFAR) $\times$ 3 seeds (0, 1, 2), giving 27 training runs, each reported as mean $\pm$ standard deviation \citep{bouthillier2021}. Shared hyperparameters (patch size $256\times256$/stride 128, 30 epochs with early stopping at patience 7, base channels 16, encoder depth 3, fractal depth 3, Adam lr $10^{-3}$ with cosine annealing) were fixed across all models and datasets, matching \citet{dutoit2023} where applicable, to ensure architecture is the only varying factor within each dataset; batch size (8 for HERA-PP seed 0, 32 for HERA-PP seeds 1--2 and all HERA-AOF/LOFAR runs, tracking available hardware; see Section 3.7) is the one exception and is not fully constant even within the HERA-PP seed sweep, a deviation discussed in Section 3.7 and Section 7. All experiments are seeded (NumPy, Python \texttt{random}, PyTorch) and logged with full hyperparameters and checkpoints for reproducibility.
+
+\section{Results}
+
+\begin{table}[h]
+\centering
+\caption{HERA-PP results (mean $\pm$ std, $n=3$ seeds).}
+\begin{tabular}{lrlll}
+\toprule
+Model & Params & Accuracy & F1 & AUC-ROC \\
+\midrule
+\textbf{FNNSeg} & \textbf{218,609} & 0.999896 $\pm$ 0.000018 & \textbf{0.9952 $\pm$ 0.0008} & 0.9995 $\pm$ 0.0002 \\
+U-Net & 482,593 & 0.999879 $\pm$ 0.000015 & 0.9944 $\pm$ 0.0007 & 0.9995 $\pm$ 0.0002 \\
+ResU-Net & 1,614,977 & 0.999846 $\pm$ 0.000028 & 0.9929 $\pm$ 0.0013 & 0.9987 $\pm$ 0.0003 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+FNNSeg attains the highest F1 with the fewest parameters, beating U-Net on every individual seed and ResU-Net on all six seed comparisons. Against the published \citet{dutoit2023} benchmarks, FNNSeg's mean F1 (0.9952; best single seed 0.9964) exceeds RFI\_NET (805K params, F1 = 0.9936), RNET (32K params, F1 = 0.9895), UNET (291K, 0.9869), ASPP\_UNET (291K, 0.9863), DSC\_DUAL\_RESUNET (370K, 0.9859), DSC\_MONO\_RESUNET (185K, 0.9826) and RNET5 (19.8K, 0.9851): the only architecture in this comparison combining F1 $\geq$ 0.995 with $\leq$ 300K parameters (Figure~\ref{fig:dutoit}).
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.9\linewidth]{figs/thesis/fig8_comparison_dutoit.png}
+\caption{Test F1 on HERA-PP: our three architectures (mean $\pm$ std, coloured bars) against all eight architectures benchmarked by \citet{dutoit2023} on the same data (grey bars, best reported run).}
+\label{fig:dutoit}
+\end{figure}
+
+\begin{table}[h]
+\centering
+\caption{HERA-AOF results (mean $\pm$ std, $n=3$ seeds).}
+\begin{tabular}{lrlll}
+\toprule
+Model & Params & Accuracy & F1 & AUC-ROC \\
+\midrule
+U-Net & 482,593 & 0.994564 $\pm$ 0.000033 & \textbf{0.7791 $\pm$ 0.0007} & 0.9793 $\pm$ 0.0040 \\
+FNNSeg & 218,609 & 0.994423 $\pm$ 0.000085 & 0.7748 $\pm$ 0.0026 & 0.9775 $\pm$ 0.0013 \\
+ResU-Net & 1,614,977 & 0.993978 $\pm$ 0.000087 & 0.7606 $\pm$ 0.0027 & 0.9719 $\pm$ 0.0026 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+All models drop from F1 $\approx$ 0.99 to F1 $\approx$ 0.77 under AOFlagger supervision, consistent with \citet{dutoit2023}; this reflects the noise ceiling of the labels rather than model failure, since a model can at best reproduce the label distribution it is trained on. U-Net edges out FNNSeg here ($\Delta$F1 = 0.0044), though the two are within a seed-variance margin of one another; ResU-Net trails both, with a validation/test inversion suggesting mild overfitting under noisy supervision.
+
+\begin{table}[h]
+\centering
+\caption{LOFAR results (mean $\pm$ std, $n=3$ seeds).}
+\begin{tabular}{lrlll}
+\toprule
+Model & Params & Accuracy & F1 & AUC-ROC \\
+\midrule
+\textbf{FNNSeg} & \textbf{218,465} & 0.994597 $\pm$ 0.000015 & \textbf{0.6337 $\pm$ 0.0006} & 0.9646 $\pm$ 0.0070 \\
+U-Net & 482,449 & 0.994470 $\pm$ 0.000044 & 0.6281 $\pm$ 0.0026 & 0.9593 $\pm$ 0.0022 \\
+ResU-Net & 1,614,833 & 0.994273 $\pm$ 0.000043 & 0.6174 $\pm$ 0.0026 & 0.9227 $\pm$ 0.0011 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+FNNSeg leads on the hardest, most realistic benchmark, with markedly lower cross-seed variance ($\pm$0.0006 vs. $\pm$0.0026 for both baselines), evidence that the fractal block's multi-path structure has a stabilising, ensemble-like effect under real, complex RFI. ResU-Net's AUC degrades most sharply from HERA-PP to LOFAR (0.9987 $\to$ 0.9227, $\Delta = -0.076$) versus FNNSeg (0.9995 $\to$ 0.9646, $\Delta = -0.035$), suggesting the larger model overfits telescope-specific idiosyncrasies more than the compact fractal network.
+
+Across all three datasets, FNNSeg's relative F1 advantage over ResU-Net grows with task difficulty (HERA-PP: +0.002; HERA-AOF: U-Net leads by 0.004; LOFAR: +0.016), and its seed-to-seed variance is the lowest of the three architectures on the two hardest datasets, a practically relevant reliability property for deployment. Figure~\ref{fig:pareto} shows the resulting parameter-efficiency Pareto frontier against all eight \citet{dutoit2023} baselines. Full per-seed tables and dataset split sizes are provided in Appendix A; additional supplementary figures are provided in Appendix B.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.85\linewidth]{figs/thesis/fig7_pareto_efficiency.png}
+\caption{Parameter efficiency on HERA-PP: test F1 vs. parameter count (log scale) for our three architectures (circles) against all eight \citet{dutoit2023} baselines (triangles). FNNSeg attains the best F1 of any architecture below 700K parameters.}
+\label{fig:pareto}
+\end{figure}
+
+\section{Discussion}
+
+\textbf{Why fractal blocks outperform standard convolutions despite fewer parameters.} We attribute the advantage to three properties, not to capacity: (i) \emph{implicit ensembling}: the two parallel branches per FractalBlock, merged by a learned $1\times1$ projection, behave like an adaptive, spatially-varying ensemble of shallow and deep feature extractors; (ii) \emph{implicit multi-scale aggregation}: the recursive depth exposes effective receptive fields of 2, 4, and 8 layers within a single block, matching RFI's simultaneous narrowband/broadband/complex morphology without explicit attention; (iii) \emph{Fibonacci channels as an information bottleneck}: sub-geometric channel growth keeps intermediate feature maps compact, encouraging compact, generalisable representations rather than memorisation, which likely explains why the largest FNNSeg advantage appears on the hardest, most overfitting-prone dataset (LOFAR). Figure~\ref{fig:heatmap} summarises mean test F1 for all nine (model, dataset) combinations in a single view, and Figure~\ref{fig:seedvar} shows the underlying per-seed distributions, confirming FNNSeg's tighter spread on HERA-PP and LOFAR visually.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.7\linewidth]{figs/thesis/fig9_cross_dataset_heatmap.png}
+\caption{Mean test F1 for all three architectures across all three datasets ($n=3$ seeds each).}
+\label{fig:heatmap}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.95\linewidth]{figs/thesis/fig10_seed_variance.png}
+\caption{Distribution of test F1 across the three random seeds, per architecture and dataset. FNNSeg's interquartile range is visibly narrower than ResU-Net's on HERA-PP and LOFAR.}
+\label{fig:seedvar}
+\end{figure}
+
+\textbf{Label quality is a first-order effect.} The gap between HERA-PP (F1 $\approx$ 0.99) and HERA-AOF (F1 $\approx$ 0.77) is far larger than any architecture effect observed in this study, underscoring that for practical deployment, investment in label quality (or noise-robust training, e.g. simulation pretraining followed by fine-tuning on heuristic labels) may yield larger returns than further architecture search (Figure~\ref{fig:difficulty}).
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.85\linewidth]{figs/thesis/fig14_dataset_difficulty.png}
+\caption{Mean test F1 by architecture and dataset, highlighting the label-quality gap (HERA-PP vs. HERA-AOF, same underlying observations) and the instrument/difficulty gap (HERA vs. LOFAR).}
+\label{fig:difficulty}
+\end{figure}
+
+\textbf{Limitations.} The LOFAR test set (109 frames) yields noisy F1 estimates, so differences below $\Delta$F1 $\approx$ 0.01 should be treated cautiously; we did not evaluate zero-shot cross-telescope transfer (train on HERA, test on LOFAR); fractal depth, Fibonacci base, and drop-path rate were fixed by design rather than tuned on the evaluation benchmarks; FNNSeg has only been evaluated as a binary segmenter, not for multi-class RFI typing or joint detection-and-restoration (cf. \citealp{zhang2024}); and, as noted in Section 3.7, only HERA-PP seed 0 (all three architectures) was trained on CPU with batch size 8; the remaining 24 runs (HERA-PP seeds 1--2, all HERA-AOF, all LOFAR) were trained on a CUDA GPU with batch size 32, a hardware-driven deviation that is not fully constant even within the HERA-PP seed sweep, though seed 0's metrics are not outliers relative to seeds 1--2 (Appendix Table A1).
+
+\textbf{Broader implications.} A model reaching F1 = 0.9952 with 218K parameters is a strong candidate for INT8 quantisation and deployment on edge accelerators (e.g., FPGAs, Jetson-class devices) at the correlator output, enabling real-time flagging at data-acquisition time, a capability that will be necessary, not optional, for the SKA's data rates.
+
+\textbf{Exploratory extensions (synthetic data).} Two task variants beyond segmentation, reported in full in Appendix C, were less successful and are reported for completeness rather than as contributions: a classification variant predicting RFI morphology type plateaued at 28--39\% accuracy (chance = 20\%) across seven architectures (Appendix C.2), and a dual-head restoration variant (FNNInpaint) reliably localised corrupted pixels (mask IoU 0.95--0.96) but could not reliably reconstruct the underlying clean signal (PSNR 0.8--12.2 dB, SSIM 0.16--0.49, Appendix C.3). Both remain open problems rather than completed results.
+
+\section{Conclusion}
+
+We presented FNNSeg, a fractal, Fibonacci-scheduled U-Net variant for RFI segmentation, and showed on three real-telescope benchmarks that it matches or exceeds U-Net, ResU-Net, and all eight architectures benchmarked by \citet{dutoit2023} on HERA-PP, while using 2.2--7.4$\times$ fewer parameters than our own baselines and 3.7$\times$ fewer than the strongest published model. The efficiency advantage is consistent across label qualities and telescopes, and grows on the hardest, most realistic benchmark (LOFAR), where FNNSeg also shows the lowest cross-seed variance. These results support fractal, sub-geometric-channel architectures as a practical, deployment-ready alternative to standard channel-doubling encoder-decoders for real-time RFI mitigation. Future work includes simulation-to-real fine-tuning to close the AOFlagger label-noise gap, self-supervised pretraining on unlabelled archives, a joint detection-and-restoration variant (FNNInpaint; preliminary synthetic-data results in Appendix C.3 show accurate corruption localisation but unreliable signal reconstruction), zero-shot cross-telescope transfer, and evaluation on simulated SKA-Low data.
+
+\section*{Data and Code Availability}
+
+All datasets are publicly available via Zenodo \citep{dutoit2023} under open-access terms; no personally identifiable information is involved. Training code, model definitions, configuration files, per-seed logs, and checkpoints are available at \url{https://github.com/ada-k/fnn_rfi} under the Apache-2.0 license.
+
+\section*{Acknowledgements}
+
+We thank du Toit, Grobler, and Ludick (2023) for releasing the curated HERA and LOFAR benchmark datasets and baseline results via Zenodo, which enabled a direct, reproducible numerical comparison against published baselines.
+
+\begin{thebibliography}{99}
+
+\bibitem[Baan et al.(2004)]{baan2004} Baan, W. A., Fridman, P. A., \& Millenaar, R. P. (2004). Radio frequency interference mitigation at the Westerbork Synthesis Radio Telescope. \emph{The Astronomical Journal}, 128(2), 933--952.
+
+\bibitem[Bouthillier et al.(2021)]{bouthillier2021} Bouthillier, X., et al. (2021). Accounting for variance in machine learning benchmarks. \emph{Proceedings of Machine Learning and Systems}, 3, 747--769.
+
+\bibitem[DeBoer et al.(2017)]{deboer2017} DeBoer, D. R., et al. (2017). Hydrogen Epoch of Reionization Array (HERA). \emph{PASP}, 129(974), 045001.
+
+\bibitem[Dosovitskiy et al.(2020)]{dosovitskiy2020} Dosovitskiy, A., et al. (2020). An image is worth 16x16 words. \emph{arXiv:2010.11929}.
+
+\bibitem[du Toit et al.(2023)]{dutoit2023} du Toit, C., Grobler, T., \& Ludick, D. (2023). A comparison framework for deep learning RFI detection algorithms in radio astronomy [Dataset]. \emph{Zenodo}. \url{https://doi.org/10.5281/zenodo.8275061}
+
+\bibitem[Gu et al.(2024)]{gu2024} Gu, Z., Liu, J., Ma, S., Fan, G., Xu, F., \& Cao, H. (2024). Radio frequency interference detection using efficient multi-scale convolutional attention UNet. \emph{arXiv:2404.06055}.
+
+\bibitem[He et al.(2016)]{he2016} He, K., Zhang, X., Ren, S., \& Sun, J. (2016). Deep residual learning for image recognition. \emph{CVPR}, 770--778.
+
+\bibitem[Kingma \& Ba(2014)]{kingma2014} Kingma, D. P., \& Ba, J. (2014). Adam: A method for stochastic optimization. \emph{arXiv:1412.6980}.
+
+\bibitem[Larsson et al.(2017)]{larsson2017} Larsson, G., Maire, M., \& Shakhnarovich, G. (2017). FractalNet: Ultra-deep neural networks without residuals. \emph{ICLR}.
+
+\bibitem[Liang et al.(2023)]{liang2023} Liang, Y.-F., et al. (2023). Detecting HI galaxies with deep neural networks in the presence of radio frequency interference. \emph{RAA}, 23(11), 115006.
+
+\bibitem[Mesarcik et al.(2022)]{mesarcik2022} Mesarcik, M., Boonstra, A.-J., Ranguelova, E., \& van Nieuwpoort, R. V. (2022). Learning to detect radio frequency interference in radio astronomy without seeing it. \emph{MNRAS}, 516(4), 5367--5378. \url{https://doi.org/10.1093/mnras/stac2503}
+
+\bibitem[Milletari et al.(2016)]{milletari2016} Milletari, F., Navab, N., \& Ahmadi, S.-A. (2016). V-Net: Fully convolutional neural networks for volumetric medical image segmentation. \emph{3DV}, 565--571.
+
+\bibitem[Mosiane et al.(2016)]{mosiane2016} Mosiane, O., Oozeer, N., \& Bassett, B. A. (2016). Radio frequency interference detection using machine learning. \emph{2016 IEEE Radio and Antenna Days of the Indian Ocean (RADIO)}, 1--2. \url{https://doi.org/10.1109/radio.2016.7772036}
+
+\bibitem[Offringa et al.(2010)]{offringa2010} Offringa, A. R., de Bruyn, A. G., Biehl, M., Zaroubi, S., Bernardi, G., \& Pandey, V. N. (2010). Post-correlation radio frequency interference classification methods. \emph{MNRAS}, 405(1), 155--167.
+
+\bibitem[Offringa et al.(2012)]{offringa2012} Offringa, A. R., van de Gronde, J. J., \& Roerdink, J. B. T. M. (2012). A morphological algorithm for improving radio-frequency interference detection. \emph{A\&A}, 539, A95.
+
+\bibitem[Ronneberger et al.(2015)]{ronneberger2015} Ronneberger, O., Fischer, P., \& Brox, T. (2015). U-Net: Convolutional networks for biomedical image segmentation. \emph{MICCAI}, 234--241.
+
+\bibitem[Sclocco et al.(2020)]{sclocco2020} Sclocco, A., van Leeuwen, J., Bal, H. E., \& van Nieuwpoort, R. V. (2020). Real-time RFI mitigation for the Apertif Radio Transient System. \emph{arXiv:2001.03389}.
+
+\bibitem[Vafaei Sadr et al.(2020)]{vafaeisadr2020} Vafaei Sadr, A., Bassett, B. A., Kunibe, E., \& Oozeer, N. (2020). Deep learning improves identification of radio frequency interference. \emph{MNRAS}, 499(1), 379--390.
+
+\bibitem[van Haarlem et al.(2013)]{vanhaarlem2013} van Haarlem, M. P., et al. (2013). LOFAR: The Low-Frequency Array. \emph{A\&A}, 556, A2.
+
+\bibitem[Xie et al.(2021)]{xie2021} Xie, E., Wang, W., Yu, Z., Anandkumar, A., Alvarez, J. M., \& Luo, P. (2021). SegFormer. \emph{NeurIPS}, 34, 12077--12090.
+
+\bibitem[Zhang et al.(2024)]{zhang2024} Zhang, J., Cognard, I., \& Dobigeon, N. (2024). RFI-DRUnet: Restoring dynamic spectra corrupted by radio frequency interference. \emph{arXiv:2402.13867}.
+
+\end{thebibliography}
+
+\appendix
+\section{Per-Seed Results}
+
+All 27 individual training runs (3 models $\times$ 3 datasets $\times$ 3 seeds) underlying Tables 2--4, read directly from the logged test-set results.
+
+\begin{table}[h]
+\centering
+\caption{Dataset split sizes (frames / patches).}
+\begin{tabular}{llrrl}
+\toprule
+Dataset & Split & Frames & Patches & Patch stride \\
+\midrule
+HERA-PP / HERA-AOF & Train & 1,008 & 9,072 & 128px (50\% overlap) \\
+HERA-PP / HERA-AOF & Val & 112 & 448 & 256px (no overlap) \\
+HERA-PP / HERA-AOF & Test & 280 & 1,120 & 256px (no overlap) \\
+LOFAR & Train & 6,719 & 60,471 & 128px (50\% overlap) \\
+LOFAR & Val & 746 & 2,984 & 256px (no overlap) \\
+LOFAR & Test & 109 & 436 & 256px (no overlap) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\emph{Train and Val frame counts sum to the ``Train'' column of Table 1 (1,120 for HERA; 7,465 for LOFAR); a 90/10 train/val split (\texttt{val\_frac=0.1} in \texttt{scripts/train\_hera.py}) is applied to that pool, while Test is the fully separate held-out split released by \citet{dutoit2023}. Source: \texttt{logs/hera/*.log} (split construction messages logged by \texttt{build\_hera\_loaders}).}
+
+\begin{table}[h]
+\centering
+\caption{HERA-PP, per seed.}
+\begin{tabular}{lrrlll}
+\toprule
+Model & Seed & Params & Accuracy & F1 & AUC-ROC \\
+\midrule
+FNNSeg & 0 & 218,609 & 0.999921 & 0.9964 & 0.9998 \\
+FNNSeg & 1 & 218,609 & 0.999889 & 0.9949 & 0.9995 \\
+FNNSeg & 2 & 218,609 & 0.999879 & 0.9944 & 0.9993 \\
+U-Net & 0 & 482,593 & 0.999897 & 0.9953 & 0.9997 \\
+U-Net & 1 & 482,593 & 0.999860 & 0.9936 & 0.9995 \\
+U-Net & 2 & 482,593 & 0.999879 & 0.9944 & 0.9993 \\
+ResU-Net & 0 & 1,614,977 & 0.999880 & 0.9945 & 0.9992 \\
+ResU-Net & 1 & 1,614,977 & 0.999813 & 0.9914 & 0.9984 \\
+ResU-Net & 2 & 1,614,977 & 0.999846 & 0.9929 & 0.9986 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{HERA-AOF, per seed.}
+\begin{tabular}{lrrlll}
+\toprule
+Model & Seed & Params & Accuracy & F1 & AUC-ROC \\
+\midrule
+FNNSeg & 0 & 218,609 & 0.994340 & 0.7724 & 0.9791 \\
+FNNSeg & 1 & 218,609 & 0.994389 & 0.7734 & 0.9758 \\
+FNNSeg & 2 & 218,609 & 0.994540 & 0.7784 & 0.9775 \\
+U-Net & 0 & 482,593 & 0.994596 & 0.7799 & 0.9737 \\
+U-Net & 1 & 482,593 & 0.994519 & 0.7782 & 0.9815 \\
+U-Net & 2 & 482,593 & 0.994577 & 0.7793 & 0.9827 \\
+ResU-Net & 0 & 1,614,977 & 0.994047 & 0.7625 & 0.9749 \\
+ResU-Net & 1 & 1,614,977 & 0.994031 & 0.7624 & 0.9686 \\
+ResU-Net & 2 & 1,614,977 & 0.993855 & 0.7568 & 0.9723 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{LOFAR, per seed.}
+\begin{tabular}{lrrlll}
+\toprule
+Model & Seed & Params & Accuracy & F1 & AUC-ROC \\
+\midrule
+FNNSeg & 0 & 218,465 & 0.994590 & 0.6344 & 0.9549 \\
+FNNSeg & 1 & 218,465 & 0.994619 & 0.6338 & 0.9711 \\
+FNNSeg & 2 & 218,465 & 0.994583 & 0.6330 & 0.9679 \\
+U-Net & 0 & 482,449 & 0.994452 & 0.6278 & 0.9579 \\
+U-Net & 1 & 482,449 & 0.994530 & 0.6314 & 0.9624 \\
+U-Net & 2 & 482,449 & 0.994428 & 0.6251 & 0.9576 \\
+ResU-Net & 0 & 1,614,833 & 0.994218 & 0.6142 & 0.9242 \\
+ResU-Net & 1 & 1,614,833 & 0.994275 & 0.6205 & 0.9221 \\
+ResU-Net & 2 & 1,614,833 & 0.994324 & 0.6174 & 0.9217 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\emph{Source: \texttt{fnn\_rfi/results/hera/\{HERA\_28-03-2023\_all,HERA\_AOF\_20-07-2023\_all,LOFAR\_Full\_RFI\_dataset\}/\{model\}\_ch16\_d3\_fib\_seed\{0,1,2\}/results.json} in the accompanying repository.}
+
+\section{Supplementary Figures}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.7\linewidth]{figs/fnn_architecture.png}
+\caption{FNNSeg architecture diagram.}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\linewidth]{figs/learning_curves_seg.png}
+\caption{Per-model learning curves (HERA-PP segmentation).}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.7\linewidth]{figs/pareto_seg.png}
+\caption{Parameter-efficiency Pareto plot against all \citet{dutoit2023} baselines.}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.48\linewidth]{figs/seg_f1_by_model.png}
+\includegraphics[width=0.48\linewidth]{figs/seg_iou_by_model.png}
+\caption{Per-model F1 (left) and IoU (right) comparison across datasets.}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\linewidth]{figs/seg_predictions.png}
+\caption{Qualitative segmentation predictions (HERA-PP test set).}
+\end{figure}
+
+\section{Appendix C: Synthetic-Data Ablation, Classification, and Inpainting Study}
+
+Before committing to the compute-intensive real-telescope experiments (Sections 5--6), we validated FNNSeg's architecture choices and explored two additional task formulations on a synthetic, on-the-fly RFI-injection pipeline (\texttt{data/synthetic\_spectrogram.py}, \texttt{data/inject\_rfi.py}): single-channel spectrograms with injected contamination drawn from five morphology types (narrowband, time-burst, broadband, diagonal, rectangle; Figure~\ref{fig:specsamples}), generated deterministically from a seed so that every run is exactly reproducible. All experiments in this appendix use 3 seeds (123, 42, 7), a different seed set from the real-data experiments (0, 1, 2) in Sections 5--6, since this synthetic study was conducted independently and earlier; we flag this explicitly rather than imply a single unified seed protocol.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\linewidth]{figs/spectrogram_samples.png}
+\caption{Example synthetic spectrograms for each of the five injected RFI morphology types used in this appendix (narrowband, time-burst, broadband, diagonal, rectangle), alongside their ground-truth binary masks.}
+\label{fig:specsamples}
+\end{figure}
+
+\subsection{C.1 Segmentation architecture ablation}
+
+We swept four architecture factors (Fibonacci vs. standard channels, standard vs. depthwise-separable convolutions, encoder stage count, and base channel width) and drop-path rate, holding all other hyperparameters fixed, to select the configuration used for FNNSeg throughout this paper (Fibonacci = True, separable = False, drop-path = 0, stages = 3, base channels = 16).
+
+\begin{table}[h]
+\centering
+\caption{Fibonacci/separable ablation (stages = 3, base channels = 16, drop-path = 0; mean $\pm$ std, n = 3 seeds unless noted).}
+\begin{tabular}{lllrll}
+\toprule
+Variant & Fibonacci & Separable & Params & IoU & F1 \\
+\midrule
+FNNSeg (selected) & Yes & No & 218,465 & 0.9757 $\pm$ 0.0006 & 0.9876 $\pm$ 0.0003 \\
+Fractal + separable & Yes & Yes & 81,843 & 0.9640 $\pm$ 0.0173 & 0.9816 $\pm$ 0.0095 \\
+Non-fractal + separable & No & Yes & 127,555 & 0.9596 $\pm$ 0.0042 & 0.9793 $\pm$ 0.0022 \\
+Non-fractal, standard convs & No & No & 344,817 & 0.9663 $\pm$ 0.0062 & 0.9828 $\pm$ 0.0033 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\emph{Non-fractal, standard convs ran with 2 seeds only (123, 7); all other rows use 3.}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\linewidth]{figs/ablation_fib_vs_sep.png}
+\caption{IoU/F1 by Fibonacci/separable configuration, synthetic segmentation task.}
+\end{figure}
+
+\begin{table}[h]
+\centering
+\caption{Stage count and base channel width ablation (Fibonacci = True, separable = False, drop-path = 0; mean $\pm$ std, n = 3 seeds).}
+\begin{tabular}{rrrll}
+\toprule
+Stages & Base ch & Params & IoU & F1 \\
+\midrule
+2 & 16 & 93,233 & 0.9460 $\pm$ 0.0484 & 0.9717 $\pm$ 0.0260 \\
+3 & 16 & 218,465 & 0.9757 $\pm$ 0.0006 & 0.9876 $\pm$ 0.0003 \\
+4 & 16 & 601,393 & 0.9642 $\pm$ 0.0148 & 0.9816 $\pm$ 0.0078 \\
+3 & 8 & 66,201 & 0.9646 $\pm$ 0.0044 & 0.9818 $\pm$ 0.0023 \\
+3 & 32 & 869,057 & 0.9721 $\pm$ 0.0077 & 0.9858 $\pm$ 0.0041 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\linewidth]{figs/ablation_ch_vs_stages.png}
+\caption{IoU/F1 as a function of encoder stage count and base channel width. Stages = 3, base channels = 16 is the best-performing configuration tested, despite not being the largest.}
+\end{figure}
+
+\begin{table}[h]
+\centering
+\caption{Drop-path ablation (Fibonacci = True, separable = False, stages = 3, base channels = 16, 218,465 params fixed; mean $\pm$ std, n = 3 seeds).}
+\begin{tabular}{rll}
+\toprule
+Drop-path rate & IoU & F1 \\
+\midrule
+0.0 (selected) & 0.9757 $\pm$ 0.0006 & 0.9876 $\pm$ 0.0003 \\
+0.05 & 0.9582 $\pm$ 0.0048 & 0.9785 $\pm$ 0.0026 \\
+0.1 & 0.9484 $\pm$ 0.0011 & 0.9733 $\pm$ 0.0006 \\
+0.2 & 0.9261 $\pm$ 0.0039 & 0.9612 $\pm$ 0.0021 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\linewidth]{figs/ablation_dp_vs_stages.png}
+\caption{IoU/F1 vs. drop-path rate. Performance degrades monotonically with drop-path rate at this training budget, motivating \texttt{drop\_path\_rate = 0} in Sections 3--6.}
+\end{figure}
+
+For reference, U-Net and ResU-Net baselines trained on the same synthetic task scored IoU = 0.9712 $\pm$ 0.0016 / F1 = 0.9853 $\pm$ 0.0008 (U-Net, 482,449 params) and IoU = 0.9738 $\pm$ 0.0030 / F1 = 0.9867 $\pm$ 0.0016 (ResU-Net, 1,614,833 params): the selected FNNSeg configuration (218,465 params) outperforms both on this synthetic benchmark too, consistent with the real-telescope results in Section 6.
+
+\subsection{C.2 Classification: predicting RFI morphology type}
+
+As a secondary task, we trained classifiers to predict which of the five morphology types (Figure~\ref{fig:specsamples}) is present in a spectrogram, using a global classification head in place of FNNSeg's segmentation decoder.
+
+\begin{table}[h]
+\centering
+\caption{RFI morphology classification (5-way, chance = 20\%; mean $\pm$ std, n = 3 seeds).}
+\begin{tabular}{lrl}
+\toprule
+Model & Params & Val. accuracy \\
+\midrule
+FNN (fib=True, sep=False) & 26,202 & 0.375 $\pm$ 0.017 \\
+FNN (fib=False, non-fractal) & 42,138 & 0.389 $\pm$ 0.024 \\
+FNN (fib=True, sep=True) & 9,152 & 0.342 $\pm$ 0.046 \\
+CNN baseline & 6,418 & 0.336 $\pm$ 0.032 \\
+Transformer (tiny ViT) & 74,954 & 0.283 $\pm$ 0.052 \\
+RNN (LSTM) & 145,802 & 0.279 $\pm$ 0.033 \\
+ResNet-cls & 874,458 & 0.323 $\pm$ 0.033 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.7\linewidth]{figs/cls_acc_by_model.png}
+\caption{Validation accuracy by architecture on the 5-way morphology classification task.}
+\end{figure}
+
+All architectures remain well above chance (20\%) but plateau at 28--39\% accuracy, notably lower than their segmentation counterparts' near-ceiling performance, and the non-fractal FNN variant slightly outperforms both fractal variants here, the opposite ranking from the segmentation ablation (Table C1). A plausible explanation is that whole-image classification requires global discrimination between visually similar morphology classes (e.g. \texttt{broadband} vs. \texttt{rectangle}), a different inductive bias than the fractal block's local, multi-path feature reuse, which is advantageous for dense per-pixel segmentation but not demonstrably so for single-label classification. This task was not pursued further; segmentation remained the focus of the dissertation and this paper.
+
+\subsection{C.3 Inpainting: joint detection and restoration}
+
+We additionally trained FNNInpaint, a dual-head variant of FNNSeg that predicts both the binary RFI mask and a pixel-wise reconstruction of the clean (RFI-free) spectrogram, evaluated with mask IoU, PSNR, and SSIM against the known clean ground truth available in the synthetic pipeline.
+
+\begin{table}[h]
+\centering
+\caption{FNNInpaint ablation (mean $\pm$ std, n = 3 seeds).}
+\begin{tabular}{lrlll}
+\toprule
+Config & Params & Mask IoU & PSNR (dB) & SSIM \\
+\midrule
+fib=T, sep=F, dp=0.1, ch=16 & 326,930 & 0.9503 $\pm$ 0.0095 & 2.00 $\pm$ 3.03 & 0.190 $\pm$ 0.111 \\
+fib=T, sep=T, dp=0.0, ch=16 & 127,972 & 0.9565 $\pm$ 0.0024 & 12.23 $\pm$ 5.80 & 0.488 $\pm$ 0.108 \\
+fib=T, sep=F, dp=0.0, ch=16 & 326,930 & 0.9622 $\pm$ 0.0035 & 0.77 $\pm$ 1.57 & 0.155 $\pm$ 0.110 \\
+fib=T, sep=F, dp=0.0, ch=32 & 1,301,410 & 0.9641 $\pm$ 0.0084 & 2.63 $\pm$ 2.94 & 0.285 $\pm$ 0.135 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.48\linewidth]{figs/inpaint_iou_bars.png}
+\includegraphics[width=0.48\linewidth]{figs/inpaint_psnr_bars.png}
+\caption{Mask IoU (left) and reconstruction PSNR (right) by FNNInpaint configuration. PSNR shows large cross-seed variance.}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\linewidth]{figs/inpaint_predictions.png}
+\caption{Qualitative FNNInpaint predictions: contaminated input, predicted mask, and reconstructed spectrogram against ground truth.}
+\end{figure}
+
+Mask localisation is consistently strong (IoU 0.95--0.96, comparable to the segmentation-only task), but pixel-value restoration is weak and highly variable across seeds: PSNR ranges from under 1~dB to 12~dB with standard deviations often exceeding the mean, and SSIM remains below 0.5 in every configuration tested. The smallest, separable configuration (127,972 params) unexpectedly achieved the best reconstruction quality, so restoration fidelity did not scale predictably with capacity in this preliminary setting. We conclude that FNNInpaint reliably answers \emph{where} contamination is but not yet \emph{what the clean signal looked like}; joint detection-and-restoration remains open future work (cf. \citealp{zhang2024}), consistent with Section 8.
+
+\subsection{C.4 Robustness to injected-RFI strength}
+
+Using the selected FNNSeg configuration, we swept injected-RFI signal-to-noise ratio (SNR) from 0.5 to 20 on the synthetic segmentation task (single seed).
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.7\linewidth]{figs/snr_sweep.png}
+\caption{Segmentation IoU as a function of injected RFI SNR.}
+\end{figure}
+
+IoU rises sharply from 0.04 at SNR = 0.5 (RFI barely distinguishable from noise) to a peak of 0.993 at SNR = 5, then gradually declines to 0.848 by SNR = 20. The decline at high SNR is unexpected and not fully explained by this preliminary single-seed sweep; we note it as an open question (possibly related to how the fixed binarisation threshold used for IoU interacts with saturating injected amplitudes at extreme SNR) rather than a settled finding, and recommend a multi-seed follow-up before drawing firm conclusions.
+
+\end{document}
