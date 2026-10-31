@@ -17,6 +17,11 @@ Radio-frequency interference (RFI) degrades sensitivity across modern radio tele
 
 ```
 fnn_rfi/
+├── LICENSE                        # Apache-2.0
+├── README.md
+├── requirements.txt
+├── __init__.py
+├── benchmark_results.json         # Parameter-count + CPU-latency benchmark output (scripts/benchmark.py)
 ├── doc/
 │   ├── PAPER_ARXIV.md             # Condensed paper (Markdown source)
 │   ├── PAPER_ARXIV.tex            # Condensed paper (LaTeX, arXiv-ready)
@@ -67,12 +72,14 @@ fnn_rfi/
 │   ├── train_toy.py               # Toy training helper
 │   ├── interim_viz.py             # Interim/in-progress visualisation (superseded by generate_thesis_plots.py)
 │   └── run_all.sh                 # End-to-end experiment runner
-├── figs/                          # Generated figures (synthetic-data ablation/classification/inpainting + figs/thesis/ for the real-data study)
-├── results/hera/                  # Per-run results.json + best_model.pt checkpoints (27 runs)
+├── figs/                          # Generated figures (synthetic-data ablation/classification/inpainting), figs/thesis/ for the real-data study
+├── results/hera/                  # Per-run results.json for all 27 runs; best_model.pt checkpoints for 24/27 (the 3 CPU-trained HERA-PP seed-0 runs were not checkpointed, see Section 3.7 of the paper)
 ├── logs/hera/                     # Per-run training logs
 └── tools/
     └── aoflagger_docker/          # Dockerfile + helper to build AOFlagger in a container
 ```
+
+Scripts under `scripts/` that write figures (`generate_thesis_plots.py`, `generate_arch_diagrams.py`, `generate_raster_plots.py`) and benchmark JSONs (`eval_hera.py`, `extract_benchmarks.py`) are written to be run with `fnn_rfi/` as a path prefix, i.e. from the parent directory of this repository (so that, for example, `generate_thesis_plots.py` writes to `fnn_rfi/figs/thesis/`). Running them from inside the repository root itself will create a duplicate nested `fnn_rfi/figs/` directory — if you see one, it's a stray artifact of running from the wrong working directory and can be deleted.
 
 The condensed paper (`doc/PAPER_ARXIV.*`) is the arXiv-submission version of this work; `doc/THESIS_DRAFT_v2.md` is the full UEL dissertation it is derived from. An arXiv-ready submission bundle (`main.tex` + all referenced figures) can be regenerated at any time from `doc/PAPER_ARXIV.tex` and is not committed to version control (see `.gitignore`).
 
