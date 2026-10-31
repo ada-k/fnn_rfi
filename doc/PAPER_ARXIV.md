@@ -1,7 +1,7 @@
 # Fractal Neural Networks with Fibonacci Channel Scheduling for Radio Frequency Interference Detection
 
 **Author:** Ada Kibet¹
-¹ *University of East London* · u2647143@uel.ac.uk, adakibet@gmail.com · [ORCID: 0009-0002-0809-8738](https://orcid.org/0009-0002-0809-8738)
+¹ *University of East London* · [ORCID: 0009-0002-0809-8738](https://orcid.org/0009-0002-0809-8738)
 
 **Code and trained checkpoints:** `https://github.com/ada-k/fnn_rfi` (Apache-2.0)
 
