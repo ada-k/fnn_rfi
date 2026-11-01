@@ -4,6 +4,7 @@
 \usepackage{amsmath,amssymb}
 \usepackage{booktabs}
 \usepackage{graphicx}
+\usepackage{float}
 \usepackage{hyperref}
 \usepackage{authblk}
 \usepackage{natbib}
@@ -13,8 +14,7 @@
 
 \title{Fractal Neural Networks with Fibonacci Channel Scheduling for Radio Frequency Interference Detection}
 
-\author[1]{Ada Kibet}
-\affil[1]{University of East London, ORCID: \href{https://orcid.org/0009-0002-0809-8738}{0009-0002-0809-8738}}
+\author{Ada Kibet}
 
 \date{}
 
@@ -584,7 +584,7 @@ Mask localisation is consistently strong (IoU 0.95--0.96, comparable to the segm
 
 Using the selected FNNSeg configuration, we swept injected-RFI signal-to-noise ratio (SNR) from 0.5 to 20 on the synthetic segmentation task (single seed).
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.7\linewidth]{../figs/snr_sweep.png}
 \caption{Segmentation IoU as a function of injected RFI SNR.}
